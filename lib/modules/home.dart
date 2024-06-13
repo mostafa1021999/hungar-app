@@ -7,6 +7,7 @@ import 'package:delivery/componants/constant%20values.dart';
 import 'package:delivery/modules/login.dart';
 import 'package:delivery/modules/main%20page.dart';
 import 'package:delivery/modules/orders.dart';
+import 'package:delivery/modules/points.dart';
 import 'package:delivery/modules/userProfile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -16,9 +17,7 @@ import '../Cubite/delivery_cubit.dart';
 import 'otp number.dart';
 
 class Home extends StatelessWidget {
-  final bool? isdark;
-  const Home(this.isdark,{super.key});
-
+  const Home({super.key});
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<DeliveryCubit, DeliveryState>(
@@ -29,11 +28,11 @@ class Home extends StatelessWidget {
     return Scaffold(
         bottomNavigationBar:BluredNavigationBarX(
             browColor: mainColor,
-          backgroundColor: isdark??false? Colors.grey:Colors.white,
+          backgroundColor: isdark??false? Colors.black12:Colors.white,
           selectedItemColor: mainColor,
-          unselectedItemColor:Colors.grey,
+          unselectedItemColor:isdark??false?Colors.white:Colors.grey,
         currentIndex: DeliveryCubit.get(context).current,
-        items: DeliveryCubit.get(context).bottomar,
+        items:dropdownvalue=='English Language'? DeliveryCubit.get(context).bottomEn :DeliveryCubit.get(context).bottomAr,
           onPressed: (index) {   DeliveryCubit.get(context).changeNavigator(index);
           pageController.jumpToPage(index);},),
         body:PageView(
@@ -41,10 +40,11 @@ class Home extends StatelessWidget {
           onPageChanged: (index) {
             DeliveryCubit.get(context).changeNavigator(index);
           },
-          children: <Widget>[
-            token==''?Login():const UserProfile(),
-            token==''?Login():const Orders(),
-            token==''?Login():const Orders(),
+          children: <Widget>
+          [
+            const UserProfile(),
+            token=='' ||token==null?Login():const Points(),
+            token==''||token==null?Login():const Orders(),
             MainPage(),
           ],
         )

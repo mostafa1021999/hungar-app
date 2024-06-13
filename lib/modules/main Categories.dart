@@ -2,6 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:delivery/Cubite/delivery_cubit.dart';
 import 'package:delivery/componants/colors.dart';
 import 'package:delivery/componants/constant%20values.dart';
+import 'package:delivery/modules/restaurant%20page.dart';
+import 'package:delivery/modules/search%20page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,19 +19,21 @@ class MainCategories extends StatelessWidget {
       // TODO: implement listener
     },
       builder: (context, state) {
+        final scaffoldKey = GlobalKey<ScaffoldState>();
         var newOffers=DeliveryCubit.get(context).offersData;
         var view=DeliveryCubit.get(context).changeViewNew;
         return Scaffold(
-      appBar: AppBar(actions: [actionAppbar()]),
-      body:  SafeArea(child: (newOffers != null)?Directionality(
+            key: scaffoldKey,
+            appBar: AppBar(actions: [actionAppbar(context)]),
+      body: SafeArea(child: (newOffers != null)?Directionality(
             textDirection: dropdownvalue=='English Language'?TextDirection.ltr:TextDirection.rtl,
             child: ListView(children: [
-              search(),
+              search(double.infinity,dropdownvalue=='English Language'?'Search for a restaurant or stores':'ابحث عن المطاعم او المتاجر',(){navigate(context, SearchPage());}),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(newOffers.data!.banners.length, (index) => Container(
+                children: List.generate(newOffers!.data!.banners.length, (index) => Container(
                   padding: EdgeInsets.all(10),
                   width: 120, height: 120,
                   child: ClipRRect(
@@ -47,7 +51,7 @@ class MainCategories extends StatelessWidget {
                 children: [
                   Text(dropdownvalue=='English Language'?'Restaurants':'المطاعم',style: TextStyle(fontSize: 20,fontWeight: FontWeight.w600),),
                   Container(
-                    decoration: BoxDecoration(border: Border.all(width: 1)),
+                    decoration: BoxDecoration(border: Border.all(width: 1),borderRadius: BorderRadius.circular(7)),
                     child: Row(
                       children: [
                         viewNew(Icons.laptop_mac_rounded,view?mainColor:floatActionColor, view? floatActionColor:Colors.black,context),
@@ -70,16 +74,50 @@ class MainCategories extends StatelessWidget {
                     physics: NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
                     itemBuilder: (BuildContext context, int index)=>Container(
-                    child: view?bigCard(dropdownvalue=='English Language'?'B-Laban':"بلبن", true, false, context):smallCard(dropdownvalue=='English Language'?'B-Laban':"بلبن",context))),
+                    child: view?bigCard(dropdownvalue=='English Language'?'B-Laban':"بلبن", true, false,
+                        (){navigate(context, Restaurant());},context):smallCard(dropdownvalue=='English Language'?'B-Laban':"بلبن",(){navigate(context, Restaurant());},context))),
               )
-            ],)):CircularProgressIndicator())
+            ],)):Directionality(
+        textDirection: dropdownvalue=='English Language'?TextDirection.ltr:TextDirection.rtl,
+        child: ListView(children: [
+                      search(double.infinity,dropdownvalue=='English Language'?'Search for a restaurant or stores':'ابحث عن المطاعم او المتاجر',(){navigate(context, SearchPage());}),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+              Skeleton(height: 80.0,width:80.0 ),
+              Skeleton(height: 80.0,width:80.0 ),
+              Skeleton(height: 80.0,width:80.0 ),
+              if(MediaQuery.of(context).size.width>=410)
+                Skeleton(height: 80.0,width:80.0 ),
+                        ],
+                      ),
+                      SizedBox(height: 5,),
+                      Padding(
+                        padding: const EdgeInsets.only(right:15.0,left: 15),
+                        child: Text(dropdownvalue=='English Language'?'Restaurants':'المطاعم',style: TextStyle(fontSize: 20,fontWeight: FontWeight.w600),),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+              Skeleton(height: 50.0,width:80.0 ),
+              Skeleton(height: 50.0,width:80.0 ),
+              Skeleton(height: 50.0,width:80.0 ),
+              if(MediaQuery.of(context).size.width>=410)
+                Skeleton(height: 50.0,width:80.0 ),
+                        ],
+                      ),
+                      SizedBox(height: 500,child:Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: ListView.builder(physics:const NeverScrollableScrollPhysics(),itemCount:3,itemBuilder:(context,index)=> Skeleton(height: 110.0,width:MediaQuery.sizeOf(context).width/1.2 )))),
+                    ],),
+            ))
     );},);
   }
 }
 Widget viewNew(icon,view,viewIcon,context)=>InkWell(
   onTap:(){DeliveryCubit.get(context).changeView();},
   child: Container(
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(7),color:view,),
       padding: EdgeInsets.all(4),
-      color:view,
       child: Icon(icon,color:viewIcon,)),
 );

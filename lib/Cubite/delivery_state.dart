@@ -43,3 +43,19 @@ class LoginOTPError extends DeliveryState{}
 
 class ChangeLanguageSuccess extends DeliveryState{}
 
+class GetUserLoading extends DeliveryState{}
+
+class GetUserSuccess extends DeliveryState{}
+
+class GetUserError extends DeliveryState{}
+
+class UpdateUserLoading extends DeliveryState{}
+
+class UpdateUserSuccess extends DeliveryState{
+  final GetUserData update;
+  UpdateUserSuccess(this.update);
+}
+
+class UpdateUserError extends DeliveryState{}
+
+

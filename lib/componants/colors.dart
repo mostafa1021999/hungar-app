@@ -6,6 +6,7 @@ const brownColor=Colors.brown;
 const borderColor=Colors.grey;
 const freeOrderColor=Colors.blue;
 const cartBottomColor=Colors.green;
+const Color textFieldColor = Color(0XFFA7BCC7);
 
 
 class Palette {

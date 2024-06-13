@@ -22,16 +22,16 @@ class _onBoardingState extends State<onBoarding> {
   ];
   @override
   Widget build(BuildContext context) {
-    Save.savedata(key: 'lang', value:'AR' );
     void submit(){
       Save.savedata(key: 'save', value: true).then((value) {
-        Save.savedata(key: 'lang', value:'English Language' ).then((value){
+        Save.savedata(key: 'lang', value:'اللغه العربيه' ).then((value){
           if(value){
-            navigateAndFinish(context , Home(isdark));
+            navigateAndFinish(context , Home());
           }});
       });
     }
     return Scaffold(
+      backgroundColor: floatActionColor,
       body: SafeArea(child: Padding(
         padding: const EdgeInsets.all(14.0),
         child: Column(
@@ -65,15 +65,13 @@ class _onBoardingState extends State<onBoarding> {
                       fontFamily: 'fontTop',
                     fontSize: 25
                   ),),
-                  Align(
-                    child: Text(items.mainText,
-                      textAlign: TextAlign.right,
-                      style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-                          fontFamily: 'fontTop',
-                        color: Colors.black,
-                        fontSize: 18
-                    ),),
-                  ),
+                  Text(items.mainText,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+                        fontFamily: 'fontTop',
+                      color: Colors.black,
+                      fontSize: 18
+                  ),),
                 ],);
               }),
             ),
@@ -92,14 +90,15 @@ class _onBoardingState extends State<onBoarding> {
                     ),),
               );
             }),),
-            FloatingActionButton(
-              onPressed: (){
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: bottom(currentPage==2?'جرب التطبيق':'متابعه', (){
                 if(currentPage==2){submit();}
                 else{ controller.nextPage(duration: const Duration(microseconds: 300), curve: Curves.easeIn);}
-              },
-              child: Icon(Icons.arrow_forward_ios_rounded,color: floatActionColor,),
-              backgroundColor: mainColor,
+              },),
             ),
+            SizedBox(height: 20,)
+
           ],),
       )),
     );

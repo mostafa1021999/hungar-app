@@ -2,10 +2,12 @@ import 'package:delivery/Cubite/delivery_cubit.dart';
 import 'package:delivery/componants/componants.dart';
 import 'package:delivery/componants/constant%20values.dart';
 import 'package:delivery/modules/home.dart';
+import 'package:delivery/modules/payment.dart';
 import 'package:delivery/shared%20prefernace/shared%20preferance.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pinput/pinput.dart';
+import 'package:sms_autofill/sms_autofill.dart';
 
 class OtpNumber extends StatefulWidget {
   String phoneNumber;
@@ -15,10 +17,34 @@ class OtpNumber extends StatefulWidget {
   State<OtpNumber> createState() => _OtpNumberState(phoneNumber: phoneNumber, country: country);
 }
 
-class _OtpNumberState extends State<OtpNumber> {
+class _OtpNumberState extends State<OtpNumber>  with SingleTickerProviderStateMixin{
   String phoneNumber;
   String country;
+  AnimationController? _animationController;
+  int levelClock = 2 * 60;
+  final FocusNode _pinFocusNode = FocusNode();
+
   _OtpNumberState({required this.phoneNumber,required this.country});
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+        vsync: this, duration: Duration(seconds: levelClock));
+    _animationController!.forward();
+    _listenSmsCode();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).requestFocus(_pinFocusNode);
+    });
+  }
+  _listenSmsCode() async {
+    await SmsAutoFill().listenForCode();
+  }
+  @override
+  void dispose() {
+    SmsAutoFill().unregisterListener();
+    _animationController!.dispose();
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     final defaultPinTheme = PinTheme(
@@ -37,10 +63,11 @@ class _OtpNumberState extends State<OtpNumber> {
     return BlocConsumer<DeliveryCubit, DeliveryState>(
   listener: (context, state) {
     if(state is LoginOTPSuccess){
-      token=DeliveryCubit.get(context).loginOTP!.token;
+      DeliveryCubit.get(context).changeNavigator(3);
       Save.savedata(key: 'token', value: token).then((value){
-        navigateAndFinish(context,  Home(isdark));
-      });}
+        loginFromCart? navigate(context, const Payment()): navigateAndFinish(context,const Home());
+      });
+    }
   },
   builder: (context, state) {
     return Scaffold(
@@ -51,20 +78,19 @@ class _OtpNumberState extends State<OtpNumber> {
           width: double.infinity,
           child: Column(
             children: [
-              const Text(
-                "Verification",
-                style: TextStyle(
-                  color: Colors.black,
+               Text(
+                dropdownvalue=='English Language'?"Verification":"تحقق من رقمك",
+                style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Container(
                 margin: const EdgeInsets.symmetric(vertical: 40),
-                child: const Text(
-                  "Enter the code sent to your number",
+                child:  Text(
+                  dropdownvalue=='English Language'?"Enter the code sent to your number":'ادخل الكود المرسل لهاتفك',
                   style: TextStyle(
-                    color: Colors.grey,
+                    color: isdark??false? Colors.white:Colors.grey,
                     fontSize: 18,
                   ),
                 ),
@@ -72,14 +98,14 @@ class _OtpNumberState extends State<OtpNumber> {
               Container(
                 margin: const EdgeInsets.only(bottom: 40),
                 child: Text(
-                  '+'+country+' '+phoneNumber,
+                  '+'+country+' '+'*******'+phoneNumber[7]+phoneNumber[8],
                   style: TextStyle(
-                    color: Colors.black,
                     fontSize: 18,
                   ),
                 ),
               ),
               Pinput(
+                focusNode: _pinFocusNode,
                 length: 6,
                 defaultPinTheme: defaultPinTheme,
                 focusedPinTheme: defaultPinTheme.copyWith(
@@ -88,10 +114,27 @@ class _OtpNumberState extends State<OtpNumber> {
                   ),
                 ),
                 validator: (value) {
-                  DeliveryCubit.get(context).userLoginOTP(phoneNumber: phoneNumber,otpNumber: value??'');
-                  return state is LoginOTPSuccess  ? navigate(context,  Home(isdark)) : 'Code is not match';
+                  DeliveryCubit.get(context).userLoginOTP(phoneNumber: '${country+phoneNumber}',otpNumber: value??'',context: context);
+                  return value!=DeliveryCubit.get(context).otp? 'Code is not match':null;
                 },
               ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("Resend code after: "),
+                  Countdown(
+                    animation: StepTween(
+                      begin: levelClock, // THIS IS A USER ENTERED NUMBER
+                      end: 0,
+                    ).animate(_animationController!),
+                  ),
+                ],
+              ),
+              if (state is LoginOTPLoading)
+                Padding(
+                  padding: const EdgeInsets.only(top: 15.0),
+                  child: CircularProgressIndicator(),
+                )
             ],
           ),
         ),
@@ -99,5 +142,25 @@ class _OtpNumberState extends State<OtpNumber> {
     );
   },
 );
+  }
+}
+class Countdown extends AnimatedWidget {
+  Countdown({Key? key, required this.animation})
+      : super(key: key, listenable: animation);
+  Animation<int> animation;
+
+  @override
+  build(BuildContext context) {
+    Duration clockTimer = Duration(seconds: animation.value);
+
+    String timerText =
+        '${clockTimer.inMinutes.remainder(60).toString()}:${clockTimer.inSeconds.remainder(60).toString().padLeft(2, '0')}';
+    return Text(
+      timerText,
+      style: TextStyle(
+        fontSize: 18,
+        color: Theme.of(context).primaryColor,
+      ),
+    );
   }
 }

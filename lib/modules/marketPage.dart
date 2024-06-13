@@ -3,6 +3,7 @@ import 'package:carousel_slider/carousel_controller.dart';
 import 'package:delivery/Cubite/delivery_cubit.dart';
 import 'package:delivery/componants/colors.dart';
 import 'package:delivery/componants/componants.dart';
+import 'package:delivery/componants/constant%20values.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -19,7 +20,7 @@ class Market extends StatelessWidget {
           return Directionality(
         textDirection: TextDirection.rtl,
         child: Scaffold(
-          appBar: AppBar(  toolbarHeight: 100,backgroundColor:mainColor,title: search(),),
+          appBar: AppBar(  toolbarHeight: 100,backgroundColor:mainColor,title: search(MediaQuery.sizeOf(context).width/1.4,dropdownvalue=='English Language'?'Search for a restaurant or stores':'ابحث عن المطاعم او المتاجر',(){}),),
           body: DeliveryCubit.get(context).offersData != null?ListView(children: [
             Row(
               children: [
@@ -33,18 +34,22 @@ class Market extends StatelessWidget {
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(right: 8.0),
-                      child: Column(children: [Text('20 - 30 دقيقة',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: brownColor),),
-                        Text("مدة التوصيل",style: TextStyle(color: brownColor,fontWeight: FontWeight.bold,),),
+                      child: Column(children: [Text('20 - 30 دقيقة',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 15,fontWeight: FontWeight.bold,color:isdark??false? floatActionColor:brownColor),),
+                        Text("مدة التوصيل",style: TextStyle(color:isdark??false? floatActionColor:brownColor,fontWeight: FontWeight.bold,),),
                       ],),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(right:8.0),
-                      child: Column(children: [Text('0 - 15 SAR',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: brownColor),),
-                        Text("رسوم التوصيل",style: TextStyle(color: brownColor,fontWeight: FontWeight.bold,),),
+                      child: Column(
+                        children: [Text('0 - 15 SAR',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 15,fontWeight: FontWeight.bold,color:isdark??false? floatActionColor:brownColor),),
+                        Text("رسوم التوصيل",style: TextStyle(color:isdark??false? floatActionColor:brownColor,fontWeight: FontWeight.bold,),),
                       ],),
-                    ),Column(children: [Text('20 SAR',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: brownColor),),
-                      Text("الحد الادنى للطلب",style: TextStyle(color: brownColor,fontWeight: FontWeight.bold,),),
-                    ],),
+                    ),Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(children: [Text('20 SAR',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 15,fontWeight: FontWeight.bold,color:isdark??false? floatActionColor:brownColor),),
+                        Text("الحد الادنى للطلب",style: TextStyle(color:isdark??false? floatActionColor:brownColor,fontWeight: FontWeight.bold,),),
+                      ],),
+                    ),
                   ],
                 ),
               ],)

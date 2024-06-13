@@ -11,15 +11,9 @@ class AppDarkLightCubit extends Cubit<AppDarkLightState> {
   bool isdark = false;
 
   void changeapppmode({bool? formshare}) {
-    if (formshare != null) {
-      isdark = formshare;
-      emit(ChangeMode());
-    }
-    else {
       isdark = !isdark;
       Save.putdata(key: 'isdark', value: isdark).then((value) =>
           emit(ChangeMode()));
-    }
   }
 
 }

@@ -1,386 +1,297 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:delivery/Cubite/delivery_cubit.dart';
 import 'package:delivery/componants/colors.dart';
 import 'package:delivery/componants/componants.dart';
+import 'package:delivery/componants/constant%20values.dart';
 import 'package:delivery/modules/cart.dart';
+import 'package:delivery/modules/main%20page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 class Restaurant extends StatefulWidget {
+  const Restaurant({super.key});
+
   @override
-  _Restaurant createState() => _Restaurant();
+  State<Restaurant> createState() => _Restaurant();
 }
-class _Restaurant extends State<Restaurant> with SingleTickerProviderStateMixin{
-  ScrollController _scrollController = ScrollController();
-  double _expandedHeight = 345.0;
-  double imageHeight=200.0;
-  double containerHeight=180.0;
-  double containerPadding = 100.0;
-  double rowItems=150;
-  double opecity=1;
-  int _currentIndex = 0;
-  ScrollController _listviewController = ScrollController();
-  ScrollController _bottomSheetController = ScrollController();
-  List<int> _listOffsets = [];
-  bool isChecked = false;
+
+class _Restaurant extends State<Restaurant>with SingleTickerProviderStateMixin{
   late AnimationController controller;
-
-  late double imageBottomSheetHeight=MediaQuery.sizeOf(context).height/4;
-
+  TextEditingController searchController = TextEditingController();
+  bool showSearch=false;
   @override
-  void initState() {
+  void initState(){
     super.initState();
     controller = BottomSheet.createAnimationController(this);
-    _scrollController.addListener(_onScroll);
-    controller.duration = Duration(milliseconds: 700);
-    _calculateListOffsets();
-  }
-  @override
-  void dispose() {
-    controller.dispose();
-    _scrollController.dispose();
-    _bottomSheetController.dispose();
-    super.dispose();
+    controller.duration = const Duration(milliseconds: 700);
   }
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<DeliveryCubit, DeliveryState>(
-  listener: (context, state) {
-    // TODO: implement listener
-  },
+  listener: (context, state) {},
   builder: (context, state) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: NotificationListener<ScrollNotification>(
-        onNotification: (notification) {
-          if (notification is ScrollUpdateNotification) {
-            final double offset = notification.metrics.pixels;
-
-            setState(() {
-              if (offset > 20 && offset < 50) {
-                imageHeight = 188 - offset;
-                containerPadding = 100 - offset * 0.0002;
-                containerHeight = 180 - offset * 2.5;
-                if (_expandedHeight > 150) {
-                  _expandedHeight -= offset * 0.1;
-                }
-                rowItems = 150 - offset;
-                if (opecity > 0.2) {
-                  opecity -= 0.2;
-                } else {
-                  opecity = 0;
-                }
-              } else if (offset <= 20) {
-                imageHeight = 188 - offset * 0.002;
-                containerPadding = 100.0;
-                containerHeight = 180 - offset * 1.9;
-                rowItems = 150.0;
-                opecity = 1.0;
-                _expandedHeight = 345.0;
-              } else {
-                opecity = 0;
-                _expandedHeight = 150;
-                containerHeight = 64;
-              }
-            });
-          }
-          return true;
-        },
-        child:Column(
-          children:[ Expanded(
-            child: CustomScrollView(
-              controller: _scrollController,
-              slivers: [
-              AnimatedContainer(
-                duration: Duration(milliseconds: 500), // Set your desired duration
-                child: SliverAppBar(
-                  expandedHeight: _expandedHeight,
-                    bottom: PreferredSize(preferredSize: Size.fromHeight(240),child: Card(
-                      child: Directionality(
-                        textDirection: TextDirection.rtl,
-                        child: Container(
-                          width: double.infinity,color: Colors.white,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 8.0,right: 8.0),
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: [
-                                 Icon(Icons.search,color: brownColor,),
+      body: SafeArea(
+        bottom: false,
+        child: Stack(
+          children: [
+            Column(
+              children:[ Expanded(
+                child: Container(
+                  color:isdark??false? Colors.grey:Colors.white,
+                  child: CustomScrollView(
+                    controller: DeliveryCubit.get(context).scrollControllerColumn,
+                    slivers: [
+                    AnimatedContainer(
+                      duration: Duration(milliseconds: 500), // Set your desired duration
+                      child: SliverAppBar(
+                        automaticallyImplyLeading: false,
+                        expandedHeight: DeliveryCubit.get(context).expandedHeight,
+                          bottom: PreferredSize(preferredSize: Size.fromHeight(240),child: Card(
+                            child: Directionality(
+                              textDirection: TextDirection.rtl,
+                              child: Container(
+                                width: double.infinity,
+                                color: isdark??false? Colors.black87:floatActionColor,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 8.0,right: 8.0),
+                                  child:
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: List.generate(topMenu.length, (index) =>InkWell(
-                                        onTap: (){scrollToIndex(index);},
-                                        child: topBar(topMenu[index],index == _currentIndex ? mainColor.shade400 : Colors.white,
-                                            index == _currentIndex ? Colors.white:brownColor))
-                                    ),),
-                                ],
+                                    children: [
+                                      IconButton(icon: Icon(Icons.search,size: 25,color: isdark??false ? floatActionColor:brownColor,),onPressed: (){setState(() {
+                                        showSearch=true;
+                                      });},),
+                                      Expanded(
+                                        child: SizedBox(
+                                          height: 50,
+                                          child: ScrollablePositionedList.builder(
+                                            physics: const AlwaysScrollableScrollPhysics(),
+                                            scrollDirection: Axis.horizontal,
+                                            itemCount: topMenu.length,
+                                            itemBuilder: (context, index) => InkWell(
+                                              onTap: (){DeliveryCubit.get(context).scrollToIndex(index);},
+                                              child: topBar(topMenu[index],index == DeliveryCubit.get(context).currentIndex ? mainColor.shade400 : isdark??false? Colors.black87:floatActionColor,
+                                                  index == DeliveryCubit.get(context).currentIndex ? mainColor.shade300:isdark??false? floatActionColor:brownColor),
+                                            ),
+                                            itemScrollController: DeliveryCubit.get(context).itemScrollController,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
+                            ),
+                          ),),
+                          pinned: true,
+                          floating: true, // Set to true
+                          snap: true,
+                        flexibleSpace: SafeArea(
+                          child: Stack(
+                              children: [
+                                AnimatedContainer(
+                                  duration: Duration(milliseconds: 300), // Duration of the animation
+                                  height: DeliveryCubit.get(context).imageHeight,
+                                  decoration: const BoxDecoration(
+                                      image: DecorationImage(
+                                          image: AssetImage("assets/logoApp.jpg"),
+                                          fit: BoxFit.cover)),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 10.0,left: 20),
+                                  child: InkWell(
+                                    onTap: (){Navigator.pop(context);},
+                                    child: CircleAvatar(
+                                      radius: 18,
+                                      backgroundColor: borderColor.shade300,
+                                      child: Icon(
+                                        color: Colors.black,
+                                        size: 22,
+                                          Icons.close,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                AnimatedPadding(
+                                    duration: Duration(milliseconds: 400), // Duration of the animation
+                                    padding: EdgeInsets.only(top: DeliveryCubit.get(context).containerHeight==180? DeliveryCubit.get(context).containerPadding+100:DeliveryCubit.get(context).containerPadding+40),
+                                    child: Container(width: double.infinity,color:isdark??false? Colors.black:floatActionColor,height:DeliveryCubit.get(context).containerHeight,)),
+                                AnimatedPadding(
+                                  duration: Duration(milliseconds: 200), // Duration of the animation
+                                  padding: EdgeInsets.only(top: DeliveryCubit.get(context).containerPadding),
+                                  child: AnimatedContainer(
+                                    duration: Duration(milliseconds: 200), // Duration of the animation
+                                    padding: EdgeInsets.all(10),
+                                    height:DeliveryCubit.get(context).containerHeight,
+                                    width: MediaQuery.of(context).size.width-38,
+                                    margin: EdgeInsets.only(left: 20,right: 20),
+                                    decoration: BoxDecoration(
+                                        color: isdark??false? Colors.blueGrey.shade500:Colors.white,
+                                        borderRadius: BorderRadius.circular(15),
+                                        boxShadow: [
+                                          BoxShadow(color: Colors.black87.withOpacity(0.3),
+                                              blurRadius: 15, spreadRadius: 1),]),
+                                    child: Directionality(
+                                      textDirection: TextDirection.rtl,
+                                      child: ListView(
+                                        physics: const NeverScrollableScrollPhysics(),
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            children: [
+                                              image('https://images.deliveryhero.io/image/hungerstation/restaurant/android_cover_photo/99995897a8808d19a4cafb0be3677cec.jpg', 40.0, 40.0, 40.0),
+                                              Padding(padding: const EdgeInsets.only(left: 8.0,right: 8.0),
+                                                child: Text('بلبن',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 20,fontWeight: FontWeight.bold),),
+                                              ),
+                                            ],),
+                                          AnimatedOpacity(
+                                              duration: Duration(milliseconds: 300), // Duration of the animation
+                                              opacity: DeliveryCubit.get(context).opecity,
+                                              child: Text("لبن زايدينه حلى",style: TextStyle(color: isdark??false? floatActionColor:borderColor.shade500,fontWeight: FontWeight.w500,fontSize: 16),)),
+                                          Container(height: 40,), // Add the Spacer widget
+                                          AnimatedOpacity(
+                                            duration: Duration(milliseconds: 500), // Duration of the animation
+                                            opacity: DeliveryCubit.get(context).opecity,
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Column(children: [Text("مدة التوصيل",style: TextStyle(fontSize: 13,color: isdark??false? floatActionColor:brownColor,fontWeight: FontWeight.bold,),),
+                                                  Text('20 - 30 دقيقة',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 13,fontWeight: FontWeight.bold,color: isdark??false? floatActionColor:brownColor),),
+                                                ],),
+                                                Column(children: [Text("رسوم التوصيل",style: TextStyle(fontSize: 13,color: isdark??false? floatActionColor:brownColor,fontWeight: FontWeight.bold,),),
+                                                  Text('0 - 15 SAR',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 13,fontWeight: FontWeight.bold,color:isdark??false? floatActionColor:brownColor),),
+                                                ],),Column(children: [Text("الحد الادنى للطلب",style: TextStyle(fontSize: 13,color: isdark??false? floatActionColor:brownColor,fontWeight: FontWeight.bold,),),
+                                                  Text('20 SAR',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 13,fontWeight: FontWeight.bold,color: isdark??false? floatActionColor:brownColor),),
+                                                ],),
+                                              ],
+                                            )
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),]),
+                        ),
+                      ),
+                    ),
+                      DecoratedSliver(
+                        decoration: BoxDecoration(
+                          color: isdark??false? Colors.black87:floatActionColor,
+                        ),
+                        sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                              (BuildContext context, int index) {
+                            return ListTile(  horizontalTitleGap: 0,
+                                title:Directionality(
+                                    textDirection: TextDirection.rtl,
+                                    child: Text('${topMenu[index]}',style:TextStyle(fontSize: 20,fontWeight: FontWeight.bold,color: isdark??false ? Colors.white:brownColor),)),
+                              subtitle: Column(
+                                children: [
+                                  SizedBox(height:bottomMenu[index].length*155,child: ListView.separated(
+                                    padding: EdgeInsets.zero,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    itemBuilder: (context,indexNew) =>InkWell(
+                                      onTap: (){bottomSheet(context, _CustomBottomSheet(onTap: '${bottomMenu[index][indexNew]}',canAdd:index%2==0?true:false,),controller: controller);},
+                                      child: menuItems(index%2==0?(){
+                                        bottomSheet(context, _CustomBottomSheet(onTap: '${bottomMenu[index][indexNew]}',canAdd:index%2==0?true:false,),controller: controller);}
+                                          :(){DeliveryCubit.get(context).addValue('${bottomMenu[index][indexNew]}',1);},index%2==0?true : false,index,indexNew,1,context,
+                                          DeliveryCubit.get(context).isNameInList(bottomMenu[index][indexNew])? addOrRemoveOne(DeliveryCubit.get(context).getValueByName(bottomMenu[index][indexNew]), context, index%2==0?(){
+                                            bottomSheet(context, _CustomBottomSheet(onTap: '${bottomMenu[index][indexNew]}', canAdd:index%2==0?true:false,),controller: controller,);}:(){DeliveryCubit.get(context).addValue('${bottomMenu[index][indexNew]}', 1);}, (){DeliveryCubit.get(context).minusValue('${bottomMenu[index][indexNew]}', 1);},false):null),
+                                    )
+                                    ,itemCount: bottomMenu[index].length, separatorBuilder: (BuildContext context, int index) =>seperate(),)),
+                                  if(DeliveryCubit.get(context).currentIndex!=topMenu.length-1)
+                                  seperate()
+                                ],
+                              ) ,
+                            );
+                          }, childCount: topMenu.length,
+                        ), ),
+                    ),
+                  ],
+                        ),
+                ),
+              ),
+                 if(values.isNotEmpty)
+                   cartPaymentBottom(dropdownvalue=='English Language'? 'Show cart':'عرض السله', (){navigate(context, Cart());}, context)
+              ]
+            ),
+            if(showSearch)
+              Container(height: double.infinity,width: double.infinity,color: Colors.black54,child: Column(children: [
+                Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      IconButton(onPressed: (){setState(() {
+                        showSearch=false;
+                      });}, icon: Icon(Icons.arrow_back_outlined,color: floatActionColor,)),
+                      Container(
+                        width: MediaQuery.sizeOf(context).width/1.35,
+                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Color(0xFFF5F5F5),),
+                        child: TextField(
+                          autofocus: true,
+                          controller: searchController,
+                          decoration: InputDecoration(
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(color: Colors.white),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            hintText: 'Enter amount to stake',
+                            border: OutlineInputBorder(),
+                            suffixIcon: IconButton(
+                              icon: Icon(Icons.close),
+                              onPressed: () {
+                                searchController.clear();
+                              },
                             ),
                           ),
                         ),
                       ),
-                    ),),
-                    pinned: true,
-                    floating: true, // Set to true
-                    snap: true,
-                  flexibleSpace: SafeArea(
-                    child: Stack(
-                        children: [
-                          AnimatedContainer(
-                            duration: Duration(milliseconds: 300), // Duration of the animation
-                            height: imageHeight,
-                            decoration: const BoxDecoration(
-                                image: DecorationImage(
-                                    image: AssetImage("assets/logoApp.jpg"),
-                                    fit: BoxFit.cover)),
-                            child: Container(
-                              padding: EdgeInsets.only(top: 90, left: 20),
-                              color: Color(0xFF3b5999).withOpacity(.40),
-                            ),
-                          ),
-                          AnimatedPadding(
-                              duration: Duration(milliseconds: 200), // Duration of the animation
-                              padding: EdgeInsets.only(top: containerHeight==180? containerPadding+100:containerPadding+40),
-                              child: Container(width: double.infinity,color: Colors.white,height:containerHeight,)),
-                          AnimatedPadding(
-                            duration: Duration(milliseconds: 200), // Duration of the animation
-                            padding: EdgeInsets.only(top: containerPadding),
-                            child: AnimatedContainer(
-                              duration: Duration(milliseconds: 200), // Duration of the animation
-                              padding: EdgeInsets.all(10),
-                              height:containerHeight,
-                              width: MediaQuery.of(context).size.width-38,
-                              margin: EdgeInsets.only(left: 20,right: 20),
-                              decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(15),
-                                  boxShadow: [
-                                    BoxShadow(color: Colors.black.withOpacity(0.3),
-                                        blurRadius: 15, spreadRadius: 1),]),
-                              child: Directionality(
-                                textDirection: TextDirection.rtl,
-                                child: ListView(
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      children: [
-                                        image('https://images.deliveryhero.io/image/hungerstation/restaurant/android_cover_photo/99995897a8808d19a4cafb0be3677cec.jpg', 40.0, 40.0, 40.0),
-                                        Padding(padding: const EdgeInsets.only(left: 8.0,right: 8.0),
-                                          child: Text('بلبن',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontFamily: 'fontTop',fontSize: 25,fontWeight: FontWeight.bold),),
-                                        ),
-                                      ],),
-                                    AnimatedOpacity(
-                                        duration: Duration(milliseconds: 300), // Duration of the animation
-                                        opacity: opecity,
-                                        child: Text("لبن زايدينه حلى",style: TextStyle(fontFamily: 'fontTop',color: borderColor,fontWeight: FontWeight.w500,fontSize: 18),)),
-                                    Container(height: 40,), // Add the Spacer widget
-                                    AnimatedOpacity(
-                                      duration: Duration(milliseconds: 500), // Duration of the animation
-                                      opacity: opecity,
-                                      child:const Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.only(right: 8.0),
-                                            child: Column(children: [Text("مدة التوصيل",style: TextStyle(color: brownColor,fontWeight: FontWeight.bold,),),
-                                              Text('20 - 30 دقيقة',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 15,fontWeight: FontWeight.bold,color: brownColor),),
-                                            ],),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.only(right:8.0),
-                                            child: Column(children: [Text("رسوم التوصيل",style: TextStyle(color: brownColor,fontWeight: FontWeight.bold,),),
-                                              Text('0 - 15 SAR',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 15,fontWeight: FontWeight.bold,color: brownColor),),
-                                            ],),
-                                          ),Column(children: [Text("الحد الادنى للطلب",style: TextStyle(color: brownColor,fontWeight: FontWeight.bold,),),
-                                            Text('20 SAR',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 15,fontWeight: FontWeight.bold,color: brownColor),),
-                                          ],),
-                                        ],
-                                      )
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),]),
+                    ],
                   ),
                 ),
-              ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                      (BuildContext context, int index) {
-                    return ListTile(  horizontalTitleGap: 0,
-                        title:Directionality(
-                            textDirection: TextDirection.rtl,
-                            child: Text('${topMenu[index]}',style:TextStyle(fontSize: 20,fontWeight: FontWeight.bold,color: brownColor),)),
-                      subtitle: SizedBox(height:bottomMenu[index].length*130+20,child: ListView.builder(
-                        controller: _listviewController,
-                        padding: EdgeInsets.zero,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemBuilder: (context,indexNew) =>menuItems(index%2==0?(){showModalBottomSheet(
-                            transitionAnimationController: controller,
-                            context: context,
-                            isScrollControlled: true,
-                            builder: (BuildContext context) {
-                              return _CustomBottomSheet(onTap: '${bottomMenu[index][indexNew]}');});}
-                            :(){setState((){addValue('${bottomMenu[index][indexNew]}',1);
-                        print(values);
-                              });},index%2==0?true : false,index,indexNew,1,context,
-                            isNameInList(bottomMenu[index][indexNew])? addOrRemoveOne(getValueByName(bottomMenu[index][indexNew]), context, index%2==0?(){showModalBottomSheet(
-                                transitionAnimationController: controller,
-                                context: context,
-                                isScrollControlled: true,
-                                builder: (BuildContext context) {
-                                  return _CustomBottomSheet(onTap: '${bottomMenu[index][indexNew]}');});}:(){addValue('${bottomMenu[index][indexNew]}', 1);}, (){minusValue('${bottomMenu[index][indexNew]}', 1);},false):null)
-                        ,itemCount: bottomMenu[index].length,)) ,
-                    );
-                  }, childCount: topMenu.length,
-                ), ),
-            ],
-                  ),
-          ),
-             if(values.isNotEmpty)
-             Padding(
-               padding: const EdgeInsets.only(bottom: 10.0,top: 10),
-               child: InkWell(
-                 onTap: (){navigate(context,const Cart());},
-                 child: Container(
-                   decoration: BoxDecoration(color: cartBottomColor.shade400,borderRadius: BorderRadius.circular(10)),
-                    height: 50,
-                    width: MediaQuery.sizeOf(context).width/1.1,
-                 child: Row(
-                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                   children: [
-                   Row(
-                     children: [
-                       Text('ريال',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontFamily: 'fontTop',fontSize: 25,fontWeight: FontWeight.bold,color: Colors.white),),
-                       SizedBox(width: 5,),
-                       Text('5',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontFamily: 'fontTop',fontSize: 25,fontWeight: FontWeight.bold,color: Colors.white),),
-                     ],
-                   ),
-                   Text('عرض السله',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontFamily: 'fontTop',fontSize: 25,fontWeight: FontWeight.bold,color: Colors.white),),
-                 ],),
-                 ),
-               ),
-             ),
-          ]
+              ],),),
+          ],
         ),
-    ));
+      ));
   },
 );
-  }
-  void addValue(String name, int value) {
-    setState(() {
-      bool valueExists = false;
-      for (var map in values) {
-        if (map.containsKey(name)) {
-          map[name] = (map[name]! + 1);
-          valueExists = true;
-          break;
-        }
-      }
-      if (!valueExists) {
-        values.add({name: value});
-      }
-    });
-  }
-  void minusValue(String name, int value) {
-    setState(() {
-      bool valueExists = false;
-      for (var map in values) {
-        if (map.containsKey(name)) {
-          map[name] = (map[name]! - 1); // Subtract 1 instead of adding 1
-          if (map[name] == 0) {
-            values.remove(map); // Remove entry from map if value is 0
-          }
-          valueExists = true;
-          break;
-        }
-      }
-      if (!valueExists) {
-        values.add({name: value});
-      }
-    });
-  }
-  bool isNameInList(String name) {
-    for (var map in values) {
-      if (map.containsKey(name)) {
-        return true;
-      }
-    }
-    return false;
-  }
-  int? getValueByName(String name) {
-    for (var map in values) {
-      if (map.containsKey(name)) {
-        return map[name];
-      }
-    }
-    return null; // Return null if the name is not found
-  }
-  void _calculateListOffsets() {
-    int offset = 0;
-    for (int i = 0; i < bottomMenu.length; i++) {
-      _listOffsets.add(offset);
-      offset += bottomMenu[i].length * 150;
-    }
-  }
-  void scrollToIndex(index) {
-    int items=calculateTotalLength(bottomMenu,index);
-    _scrollController.animateTo(
-      items * 150, // Replace ITEM_HEIGHT with the height of each item in your list
-      duration: Duration(milliseconds: 500), // Adjust the duration as per your preference
-      curve: Curves.easeInOut, // Adjust the curve as per your preference
-    );
-  }
-  void _onScroll() {
-    final itemHeight = 150; // Replace with the actual height of each item
-    final offset = _scrollController.offset;
-    int ?currentIndex;
-    for (int i = 0; i < _listOffsets.length; i++) {
-      final startOffset = _listOffsets[i];
-      final endOffset = startOffset + bottomMenu[i].length * itemHeight;
-
-      if (offset >= startOffset && offset < endOffset) {
-        currentIndex = i;
-        break;
-      }
-    }
-
-    if (currentIndex != _currentIndex) {
-      setState(() {
-        _currentIndex = currentIndex!;
-      });
-    }
   }
 
 }
 
+
 class _CustomBottomSheet extends StatefulWidget {
    var onTap;
-
+   bool canAdd;
   @override
-
-  _CustomBottomSheet({required this.onTap});
-  _CustomBottomSheetState createState() => _CustomBottomSheetState( onTap:onTap);
+  _CustomBottomSheet({required this.onTap,required this.canAdd});
+  _CustomBottomSheetState createState() => _CustomBottomSheetState( onTap:onTap,canAdd: canAdd);
 }
 
 class _CustomBottomSheetState extends State<_CustomBottomSheet> {
   Color containerColor = Colors.white;
   ScrollController _bottomSheetController = ScrollController();
-  bool isChecked = false;
   late AnimationController controller;
   int itemsNumber=1;
   late double imageBottomSheetHeight=MediaQuery.sizeOf(context).height/4;
    var onTap;
-
-  _CustomBottomSheetState({required this.onTap});
-
+  bool canAdd;
+  List<List<bool>> checklist = List.generate(
+    bottomMenu.length,
+        (index) => List.filled(bottomMenu[index].length, false),
+  );
+  _CustomBottomSheetState({required this.onTap,required this.canAdd});
+  void changeChecklistValue(int checklistIndex, int itemIndex, bool value) {
+    setState(() {
+      checklist[checklistIndex][itemIndex] = value;
+    });
+  }
   @override
   void initState() {
     super.initState();
@@ -442,35 +353,37 @@ class _CustomBottomSheetState extends State<_CustomBottomSheet> {
               padding: const EdgeInsets.only(left:10.0,right: 10),
               child: Text(
                 'رز بلبن', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
-                style:TextStyle(fontSize: 20,fontWeight: FontWeight.bold,color: brownColor),
+                style:TextStyle(fontSize: 20,fontWeight: FontWeight.bold,color:isdark??false? floatActionColor: brownColor),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.only(left:15.0,right: 15),
+             Padding(
+              padding:const EdgeInsets.only(left:15.0,right: 15),
               child: Text(
                 "رز بلبن بالمكسرات و النوتيلا و الاضافات",
-                style: TextStyle(color: borderColor), maxLines: 2, overflow: TextOverflow.ellipsis,
+                style: TextStyle(color:isdark??false? floatActionColor: borderColor), maxLines: 2, overflow: TextOverflow.ellipsis,
               ),
             ),
             Expanded(
               child: ListView.builder(
                 controller: _bottomSheetController,
-                itemCount: topMenu.length,
+                itemCount: canAdd?topMenu.length:0,
                 itemBuilder: (context,index)=>Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(left: 10.0,right: 10),
-                      child: Text('${topMenu[index]}',style:TextStyle(fontSize: 20,fontWeight: FontWeight.bold,color: brownColor),),
+                      child: Text('${topMenu[index]}',style:TextStyle(fontSize: 20,fontWeight: FontWeight.bold,color: isdark??false? floatActionColor:brownColor),),
                     ),
                     SizedBox(
                       height:bottomMenu[index].length*55,
                       child: ListView.builder(
                         physics: NeverScrollableScrollPhysics(),
-                        itemBuilder: (context,otherIndex)=>checkList(isChecked,(bool? value) {
-                          setState(() {
-                            isChecked = value ?? false;
-                          });}),itemCount: bottomMenu[index].length,),
+                        itemBuilder: (context,otherIndex,){
+                          final bool isChecked = checklist[index][otherIndex];
+                          return checkList(isChecked,(bool? value) {
+                            changeChecklistValue(index, otherIndex, value ?? false);
+                          },
+                          );},itemCount: bottomMenu[index].length,),
                     ),
                   ],
                 ),
@@ -497,10 +410,10 @@ class _CustomBottomSheetState extends State<_CustomBottomSheet> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    const Row(
+                     Row(
                       children: [
                         Text(
-                          'ريال', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
+                          dropdownvalue=='English Language'?'SAR':'ريال', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
                           style:TextStyle(fontSize: 10,fontWeight: FontWeight.bold,color: Colors.white),
                         ),
                         Text(
@@ -510,7 +423,7 @@ class _CustomBottomSheetState extends State<_CustomBottomSheet> {
                       ],
                     ),
                        Text(
-                        'اضافة', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
+                         dropdownvalue=='English Language'?'Add cart':'اضافة', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
                         style:TextStyle(fontSize: 15,fontWeight: FontWeight.bold,color: Colors.white),
                       ),
                   ],
@@ -534,19 +447,19 @@ class _CustomBottomSheetState extends State<_CustomBottomSheet> {
         Row(
           children: [
             Text(
-              'ريال', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
-              style:TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: brownColor),
+              dropdownvalue=='English Language'?'Sar':'ريال', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
+              style:TextStyle(fontSize: 15,fontWeight: FontWeight.bold,color: isdark??false? floatActionColor:brownColor),
             ),
             SizedBox(width: 5,),
             Text(
               '6+', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
-              style:TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: brownColor),
+              style:TextStyle(fontSize: 15,fontWeight: FontWeight.bold,color: isdark??false? floatActionColor:brownColor),
             ),
           ],
         ),
         Text(
           'بيبسى', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
-          style:TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: brownColor),
+          style:TextStyle(fontSize: 15,fontWeight: FontWeight.bold,color: isdark??false? floatActionColor:brownColor),
         ),
       ],
     ),
@@ -555,3 +468,4 @@ class _CustomBottomSheetState extends State<_CustomBottomSheet> {
     activeColor: mainColor.shade400,
   );
 }
+
