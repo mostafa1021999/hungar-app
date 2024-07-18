@@ -4,7 +4,6 @@ import 'package:delivery/componants/componants.dart';
 import 'package:delivery/componants/constant%20values.dart';
 import 'package:delivery/modules/login.dart';
 import 'package:delivery/modules/payment.dart';
-import 'package:delivery/modules/restaurant%20page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -45,21 +44,19 @@ class Cart extends StatelessWidget{
                   Directionality(
                     textDirection: dropdownvalue=='English Language'?TextDirection.ltr : TextDirection.ltr,
                     child: SizedBox(
-                      height: values.length*90,
+                      height: values.length*100,
                       child: ListView.separated(
                         physics: const NeverScrollableScrollPhysics(),
                         separatorBuilder: (context,index)=>seperate(),
                         itemCount: values.length,
                         itemBuilder: (context,index){
-                          var map = values[index];
-                          var key = map.keys.first;
                           return Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                           Padding(
                             padding: const EdgeInsets.all(5.0),
-                            child: image('https://images.deliveryhero.io/image/hungerstation/restaurant/android_cover_photo/99995897a8808d19a4cafb0be3677cec.jpg', 50.0, 50.0, 40.0),
+                            child: image('${values[index]['image']}', 70.0, 60.0, 40.0,BoxFit.fill),
                           ),
                           Expanded(child: Padding(
                             padding: const EdgeInsets.all(5.0),
@@ -67,29 +64,23 @@ class Cart extends StatelessWidget{
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                Text('$key',maxLines: 2, overflow: TextOverflow.ellipsis,style:TextStyle(fontSize: 17,fontWeight: FontWeight.bold,),),
+                                Text('${values[index]['name']}',maxLines: 2, overflow: TextOverflow.ellipsis,style:TextStyle(fontSize: 17,fontWeight: FontWeight.bold,),),
                                SizedBox(height: 5,),
-                                Text('120 SR',maxLines: 1, overflow: TextOverflow.ellipsis,style:TextStyle(fontSize: 18,fontWeight: FontWeight.bold,),),
+                                Text('${values[index]['price']} SR',maxLines: 1, overflow: TextOverflow.ellipsis,style:TextStyle(fontSize: 18,fontWeight: FontWeight.bold,),),
                               ],
                             ),
                           )),
-                            StatefulBuilder(
-                              builder:(context,setState)=> addOrRemoveOne(getValueByName("$key"), context,(){
-                                setState(() {
-                                  map[key] = (map[key]! + 1);
-                                });}, (){
-                                setState(() {
-                                  map[key] = (map[key]! - 1);
-                                  if (map[key] == 0) {
-                                    values.remove(map);
-                                    DeliveryCubit.get(context).increment();
-                                    if(values.isEmpty){
-                                      Navigator.pop(context);
-                                    }
-                                  }
-                                });
-                              },false),
-                            )
+                            Flexible(
+                              child: addOrRemoveOne(
+                                    values[index]['quantity'],
+                                    context,
+                                    (){ DeliveryCubit.get(context).addValue(values[index]['name'],1,values[index]['image'],values[index]['price'],values[index]['id'],values[index]['extraId']);},
+                                    (){ DeliveryCubit.get(context).minusValue(values[index]['name'],1,values[index]['image'],values[index]['price'],values[index]['id']);
+                                      if(values.isEmpty){Navigator.pop(context);}
+                                      },
+                                    false
+                                ),
+                              ),
                         ],);}
                       ),
                     ),
@@ -155,7 +146,7 @@ class Cart extends StatelessWidget{
                             child: Text(dropdownvalue=='English Language'?'SR' : 'ريال'),
                           ),
                           SizedBox(width: 5,),
-                          Text('118' ,maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontFamily: 'fontTop',fontSize: 17,fontWeight: FontWeight.w400,),),
+                          Text('$price' ,maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontFamily: 'fontTop',fontSize: 17,fontWeight: FontWeight.w400,),),
                         ],
                       ),
                       Text(dropdownvalue=='English Language'?'Total order' : 'اجمالى الطلب',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontFamily: 'fontTop',fontSize: 17,fontWeight: FontWeight.w400,),),
@@ -164,7 +155,7 @@ class Cart extends StatelessWidget{
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      cartBottom(context,(){navigate(context,(token!=''&&token!=null)? Payment():Login());if(token==''||token==null)loginFromCart=true;},cartBottomColor.shade600,dropdownvalue=='English Language'? 'Pay now':'اذهب للدفع'),
+                      cartBottom(context,(){navigate(context,(token!=''&&token!=null)? Payment():Login());if(token==''||token==null)loginFromCart=true;print(values);},cartBottomColor.shade600,dropdownvalue=='English Language'? 'Pay now':'اذهب للدفع'),
                       cartBottom(context,(){Navigator.pop(context);},mainColor.shade400,dropdownvalue=='English Language'? 'Add new':'اضافه جديدة'),
                     ],
                   ),

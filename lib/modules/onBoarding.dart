@@ -98,7 +98,6 @@ class _onBoardingState extends State<onBoarding> {
               },),
             ),
             SizedBox(height: 20,)
-
           ],),
       )),
     );

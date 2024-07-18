@@ -7,7 +7,7 @@ class GetUserData {
   String? address;
   GetUserData.fromJson(Map<String, dynamic> json) {
     id = json['id'];
-    username = json['username'];
+    username = json['name'];
     email = json['email'];
     birthdate = json['birthdate'];
     phoneNumber = json['phoneNumber'];

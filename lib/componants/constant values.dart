@@ -9,7 +9,8 @@ PageController pageController = PageController(
   initialPage: 3,
 );
 dynamic token='';
-String dropdownvalue=Save.getdata(key: 'lang');
+int price=0;
+String ?dropdownvalue=Save.getdata(key: 'lang');
 ThemeData lightMode=ThemeData(
     fontFamily: dropdownvalue=='English Language'? 'fonten':'fontTop',
     primarySwatch: mainColor,

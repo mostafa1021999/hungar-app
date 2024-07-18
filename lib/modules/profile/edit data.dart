@@ -1,3 +1,4 @@
+
 import 'package:delivery/Cubite/delivery_cubit.dart';
 import 'package:delivery/componants/colors.dart';
 import 'package:delivery/componants/componants.dart';
@@ -18,7 +19,6 @@ class EditInformation extends StatelessWidget {
     bool name=false;
     bool birth=false;
     bool updateEmail=false;
-    String ?birthDateInString;
     DateTime ?birthDate;
     final _formKey = GlobalKey<FormState>();
     bool dateSelected=false;
@@ -32,75 +32,74 @@ class EditInformation extends StatelessWidget {
       r'x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])',
     );
     return BlocConsumer<DeliveryCubit, DeliveryState>(
-  listener: (context, state) {
+      listener: (context, state) {
 
-  },
-  builder: (context, state) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(dropdownvalue=='English Language'?'Edit information':'حدث بياناتك'),
-      ),
-      body: DeliveryCubit.get(context).getUserData!=null?Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            if(state is UpdateUserLoading)
-              const LinearProgressIndicator(),
-            const SizedBox(height: 15,),
-            profile('رقم الهاتف','Phone number',true,TextEditingController(text: '${DeliveryCubit.get(context).getUserData!.phoneNumber}',),Icons.phone),
-            profile('اسمك','Name',user!.username!=''||name? true:false,user.username!=''? TextEditingController(text: '${DeliveryCubit.get(context).getUserData!.username}',):nameController,Icons.person),
-            Form(
-              key: _formKey,
-               child:  profile('حسابك','Gmail',user.email!=''||updateEmail? true:false,user.email!=''? TextEditingController(text:'${DeliveryCubit.get(context).getUserData!.email}',):gmailController,Icons.email,
-                validate: (value){
-                 if(emailRegex.hasMatch(value)){ return null;}
-                 return 'Enter valid email';
+      },
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(dropdownvalue=='English Language'?'Edit information':'حدث بياناتك'),
+          ),
+          body: DeliveryCubit.get(context).getUserData!=null?Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              children: [
+                if(state is UpdateUserLoading)
+                  const LinearProgressIndicator(),
+                const SizedBox(height: 15,),
+                profile('رقم الهاتف','Phone number',true,TextEditingController(text: '${DeliveryCubit.get(context).getUserData!.phoneNumber}',),Icons.phone),
+                profile('اسمك','Name',user!.username!=''||name? true:false,user.username!=''? TextEditingController(text: '${DeliveryCubit.get(context).getUserData!.username}',):nameController,Icons.person),
+                Form(
+                  key: _formKey,
+                  child:  profile('حسابك','Gmail',user.email!=''||updateEmail? true:false,user.email!=''? TextEditingController(text:'${DeliveryCubit.get(context).getUserData!.email}',):gmailController,Icons.email,
+                      validate: (value){
+                        if(emailRegex.hasMatch(value)){ return null;}
+                        return 'Enter valid email';
+                      }),
+
+                ),
+                StatefulBuilder(
+                  builder:(context,setState)=> GestureDetector(
+                      child: dateSelected?
+                      date("${birthDate!.year}-${birthDate!.month}-${birthDate!.day}",true):date(user.birthdate!=null? '${user.birthdate}':'mm/dd/yy',false),
+                      onTap: user.birthdate==null? birth?null:() async{
+                        final datePick= await showDatePicker(
+                          context: context,
+                          initialDate: new DateTime.now(),
+                          firstDate: new DateTime(1950),
+                          lastDate: new DateTime.now(),
+                        );
+                        if(datePick!=null && datePick!=birthDate){
+                          setState(() {
+                            dateSelected=true;
+                            birthDate=datePick;
+                          });
+                        }
+                      }:null
+                  ),
+                ),
+                Spacer(),
+                bottom('Update information', (){
+                  if(_formKey.currentState!.validate()){
+                    updateEmail=true;
+                    DeliveryCubit.get(context).userUpdate(email: gmailController.text,);
+                  }
+                  if(nameController.text!=''){
+                    DeliveryCubit.get(context).userUpdate(username: nameController.text,);
+                    name=true;
+                  }
+                  if(birthDate!=null){
+                    DeliveryCubit.get(context).userUpdate(birthdate:'${birthDate!.month}/${birthDate!.day}/${birthDate!.year}',);
+                    birth=true;
+                  }
                 }),
-
+                const SizedBox(height: 10,)
+              ],
             ),
-            StatefulBuilder(
-              builder:(context,setState)=> GestureDetector(
-                  child: dateSelected?
-                  date("${birthDate!.year}-${birthDate!.month}-${birthDate!.day}",true):date(user.birthdate!=null? '${user.birthdate}':'mm/dd/yy',false),
-                  onTap: user.birthdate==null? birth?null:() async{
-                    final datePick= await showDatePicker(
-                      context: context,
-                      initialDate: new DateTime.now(),
-                      firstDate: new DateTime(1950),
-                      lastDate: new DateTime.now(),
-                    );
-                    if(datePick!=null && datePick!=birthDate){
-                      setState(() {
-                        dateSelected=true;
-                        birthDate=datePick;
-                        birthDateInString = "${birthDate!.year}-${birthDate!.month}-${birthDate!.day}"; // 08/14/2019
-                      });
-                    }
-                  }:null
-              ),
-            ),
-            Spacer(),
-            bottom('Update information', (){
-              if(_formKey.currentState!.validate()){
-                updateEmail=true;
-                DeliveryCubit.get(context).userUpdate(email: gmailController.text,);
-              }
-              if(nameController.text!=''){
-                DeliveryCubit.get(context).userUpdate(username: nameController.text,);
-                name=true;
-              }
-              if(birthDate!=null){
-                DeliveryCubit.get(context).userUpdate(birthdate:'${birthDate!.month}/${birthDate!.day}/${birthDate!.year}',);
-                birth=true;
-              }
-            }),
-            const SizedBox(height: 10,)
-          ],
-        ),
-      ):Center(child: const LinearProgressIndicator()),
+          ):Center(child: const LinearProgressIndicator()),
+        );
+      },
     );
-  },
-);
   }
 }
 Widget profile(textAr,textEn,readOnly,controller,icon,{validate})=>Padding(

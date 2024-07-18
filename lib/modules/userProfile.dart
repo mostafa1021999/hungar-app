@@ -43,7 +43,8 @@ class UserProfile extends StatelessWidget {
                     text: dropdownvalue=='English Language'?'Edit information':'حدث بياناتك',
                     hasNavigation: true,
                     onTap: (){
-                      DeliveryCubit.get(context).getNewUser(context);
+                      if(DeliveryCubit.get(context).getUserData==null)
+                      DeliveryCubit.get(context).getNewCustomer(context);
                       navigate(context, EditInformation());},
                   ),
                   if(token!=''&&token!=null)

@@ -144,7 +144,11 @@ Widget cartPaymentBottom(text,onTap,context)=>Container(
             children: [
               Text(dropdownvalue=='English Language'? 'Sar':'ريال',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 25,fontWeight: FontWeight.bold,color: Colors.white),),
               SizedBox(width: 5,),
-              Text('5',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 25,fontWeight: FontWeight.bold,color: Colors.white),),
+              Text(DeliveryCubit.get(context).couponData!=null? "${DeliveryCubit.get(context).couponData!.newOrderPrice}":'$price',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 25,fontWeight: FontWeight.bold,color: Colors.white),),
+              if(DeliveryCubit.get(context).couponData!=null)
+              SizedBox(width: 5,),
+              if(DeliveryCubit.get(context).couponData!=null)
+              Text('$price',style: const TextStyle(fontSize: 13 ,decoration: TextDecoration.lineThrough),),
             ],
           ),
           Text(text,maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 25,fontWeight: FontWeight.bold,color: Colors.white),),
@@ -152,7 +156,7 @@ Widget cartPaymentBottom(text,onTap,context)=>Container(
     ),
   ),
 );
-Widget bigCard(name,load,mainPage,onTap,context)=>InkWell(
+Widget bigCard(name,description,load,mainPage,onTap,logo,cover,context)=>InkWell(
   onTap: onTap,
   child: Card(
     shape: RoundedRectangleBorder(
@@ -166,10 +170,10 @@ Widget bigCard(name,load,mainPage,onTap,context)=>InkWell(
             height: mainPage?150.0:160,
             child:  Stack(
               children: [
-                image('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhVPeYv-tKVHszneiR3M1Je9bD65K-eoWKT2vOb8KyDEinI8H4spz4zzCrf6flGxCswS4jiVa5KwsML2731rxjydmQTwSSIcJ0b9lYiKOnEDLipZEbefhy1yH7puXTenvZnFUu_eIvQKQFeIyToLg1XSWMx4a8SsVLFYNcepwuyEQAqdkmDWUHKdi2P/s800/%D9%85%D9%86%D9%8A%D9%88-%D8%A8%D9%84%D8%A8%D9%86-%D8%A8%D8%A7%D9%84%D8%A7%D8%B3%D8%B9%D8%A7%D8%B1.jpg', 180.0, mainPage?MediaQuery.sizeOf(context).width/1.4:MediaQuery.sizeOf(context).width/1.11,15.0),
+                image(cover, 180.0, mainPage?MediaQuery.sizeOf(context).width/1.4:MediaQuery.sizeOf(context).width/1.11,15.0,BoxFit.fill),
                 Positioned(
                   top: 10, right: 10, height:50, width: 50,
-                  child:image('https://images.deliveryhero.io/image/hungerstation/restaurant/android_cover_photo/99995897a8808d19a4cafb0be3677cec.jpg', 50.0, 50.0,15.0),),
+                  child:image(logo, 50.0, 50.0,15.0,BoxFit.fill),),
                 Positioned(
                   top: 10, left: 10, height:25,
                   child:mainPage?Container(
@@ -234,11 +238,11 @@ Widget bigCard(name,load,mainPage,onTap,context)=>InkWell(
         const SizedBox(height: 10,),
         Padding(
           padding: const EdgeInsets.only(left:8.0,right: 8),
-          child: Text('$name',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 18,fontWeight: FontWeight.bold),),
+          child: Text('${name??""}',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 18,fontWeight: FontWeight.bold),),
         ),
          Padding(
           padding: const EdgeInsets.only(left:8.0,right: 8),
-          child: Text(dropdownvalue=='English Language'?'Milk add to sweets':"لبن زايدينه حلى",style: TextStyle(color:isdark??false? floatActionColor:borderColor,fontSize: 13),),
+          child: Text('${description??""}',style: TextStyle(color:isdark??false? floatActionColor:borderColor,fontSize: 13),),
         ),
         if(mainPage)
         Container(
@@ -270,14 +274,14 @@ Widget bigCard(name,load,mainPage,onTap,context)=>InkWell(
     ),
   ),
 );
-Widget smallCard(name,onTap,context)=>InkWell(
+Widget smallCard(name,imageFood,description,onTap,context)=>InkWell(
   onTap: onTap,
   child: Card(
     child: Column(
       children: [
         Row(
           children: [
-            image('https://images.deliveryhero.io/image/hungerstation/restaurant/android_cover_photo/99995897a8808d19a4cafb0be3677cec.jpg', 75.0, 75.0,15.0),
+            image(imageFood, 75.0, 75.0,15.0,BoxFit.fill),
             const SizedBox(width: 10,),
             Expanded(
               child: Column(
@@ -286,14 +290,14 @@ Widget smallCard(name,onTap,context)=>InkWell(
                   Padding(
                     padding: const EdgeInsets.only(left:8.0,right: 8),
                     child: Text(
-                      '$name', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
+                      '${name??""}', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
                       style:const TextStyle(fontSize: 18,fontWeight: FontWeight.bold,),
                     ),
                   ),
                    Padding(
                     padding: const EdgeInsets.only(left:8.0,right: 8),
                     child: Text(
-                      dropdownvalue=='English Language'?'Milk add to sweets':"لبن زايدينه حلى",
+                      '${description??""}',
                       style: TextStyle(fontSize: 13,color:isdark??false? floatActionColor: borderColor), maxLines: 1, overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -400,8 +404,8 @@ Widget searchData(dataSearch,controller)=>TextFormField(
 );
 Widget Skeleton({height,width})  {
     return Shimmer.fromColors(
-      baseColor: borderColor[300]!,
-      highlightColor: borderColor[100]!,
+      baseColor: borderColor[isdark??false? 800:300]!,
+      highlightColor: borderColor[isdark??false? 800:100]!,
       child: Padding(
         padding: EdgeInsets.all(5),
             child: Container(
@@ -428,7 +432,7 @@ Widget changeItems()=>Padding(
       ),),
   ),
 );
-Widget image(url,height,width,reduis)=>ClipRRect(
+Widget image(url,height,width,reduis,fit)=>ClipRRect(
   borderRadius: BorderRadius.circular(reduis),
   child: CachedNetworkImage(
     placeholder: (context,url) => const Center(child: CircularProgressIndicator()),
@@ -436,7 +440,7 @@ Widget image(url,height,width,reduis)=>ClipRRect(
     imageUrl: '$url',
     height: height,
     width: width,
-    fit: BoxFit.fill,),);
+    fit: fit,),);
 Widget slider(market,controller,context)=>CarouselSlider(
     carouselController: controller,
     items: DeliveryCubit.get(context).offersData!.data!.banners.map((e) => Padding(
@@ -476,7 +480,7 @@ Widget dots(length,context)=>Directionality(
     ),
   ),
 );
-Widget menuItems(onTap,canAdd,index1,index2,itemcount,context,onTheImage)
+Widget menuItems(onTap,canAdd,provider,itemcount,context,onTheImage)
 {
   return StatefulBuilder(
     builder:(context,setstate)=> Container(
@@ -491,7 +495,7 @@ Widget menuItems(onTap,canAdd,index1,index2,itemcount,context,onTheImage)
             ),
             Stack(
               children: [
-                image('https://images.deliveryhero.io/image/hungerstation/restaurant/android_cover_photo/99995897a8808d19a4cafb0be3677cec.jpg', 110.0, 100.0,15.0),
+                image('${provider.image}', 110.0, 100.0,15.0,BoxFit.fill),
                 Positioned(
                     bottom: 0,
                     child: onTheImage!=null? onTheImage:InkWell(
@@ -502,19 +506,20 @@ Widget menuItems(onTap,canAdd,index1,index2,itemcount,context,onTheImage)
         ),
         Expanded(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: dropdownvalue=='English Language'? CrossAxisAlignment.start : CrossAxisAlignment.end,
             children: [
               Padding(
                 padding: const EdgeInsets.only(left:8.0,right: 8),
                 child: Text(
-                  '${bottomMenu[index1][index2]}', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
+                  '${provider.name}', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
                   style:TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: isdark??false? floatActionColor:brownColor.shade400),
                 ),
               ),
                Padding(
                 padding: EdgeInsets.only(left:8.0,right: 8),
                 child: Text(
-                  "رز بلبن بالمكسرات و النوتيلا و الاضافات",
+                  textDirection: dropdownvalue=='English Language'? TextDirection.ltr:TextDirection.rtl, // Set the text direction to right-to-left
+                  '${provider.description}',
                   style: TextStyle(color: isdark??false? floatActionColor:borderColor), maxLines: 2, overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -527,13 +532,13 @@ Widget menuItems(onTap,canAdd,index1,index2,itemcount,context,onTheImage)
                     style:TextStyle(fontSize: 16,fontWeight: FontWeight.bold,color: isdark??false? floatActionColor:brownColor.shade300),
                   ),SizedBox(width: 5,),
                   Text(
-                    '200', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
+                    '${provider.calories}', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
                     style:TextStyle(fontSize: 16,fontWeight: FontWeight.bold,color: isdark??false? floatActionColor:brownColor.shade300),
                   ), Icon(Icons.local_fire_department_rounded,color: isdark??false? floatActionColor:brownColor,),
                   Padding(
                     padding: const EdgeInsets.only(left:8.0,right: 8),
                     child: Text(
-                      '18 ريال', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
+                      '${provider.price}ريال ', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start,
                       style:TextStyle(fontSize: 18,fontWeight: FontWeight.bold,color: isdark??false? floatActionColor:brownColor),
                     ),
                   ),
@@ -561,24 +566,16 @@ Widget topBar(name,color,textColor)=>Container(
     ),
   ),);
 final List<List<String>> bottomMenu = [
-  ['رز بلبن بالمكسرات', 'رز بلبن بالمكسرات 2', 'رز بلبن بالمكسرات 3'],
-  ['Item 2-1', 'Item 2-2'],
+  ['بيبسى',],
+  ['صوص تكا',],
   ['Item 3-1', 'Item 3-2', 'Item 3-3', 'Item 3-4'],
-  ['Item 4-1', 'Item 4-2', 'Item 4-3', 'Item 4-4','Item 4-5'],
-  ['Item 4-1', 'Item 4-2', 'Item 4-3', 'Item 4-4','Item 4-5','Item 4-5','Item 4-5','Item 4-5'],
-  ['Item 4-1', 'Item 4-2', 'Item 4-3', 'Item 4-4','Item 4-5','Item 4-5','Item 4-5','Item 4-5','Item 4-5','Item 4-5','Item 4-5',],
-  ['Item 4-1', 'Item 4-2', 'Item 4-3', 'Item 4-4','Item 4-5'],
-  ['Item 4-1', 'Item 4-2', 'Item 4-3', 'Item 4-4','Item 4-5'],
-  ['Item 4-1', 'Item 4-2', 'Item 4-3', 'Item 4-4','Item 4-5'],
 ];
-List<String> topMenu=['ارز بلبن','حلو خضراء','الحسو الجديد','قسم المشنكاح','جديد','جديد اوى','جديد اوى','جديد اوى','جديد اوى'];
-int calculateTotalLength(List<List<String>> bottomMenu,index) {
-  int totalLength = 0;
-  for (var i = 0; i < index; i++) {
-    totalLength += bottomMenu[i].length;
-  }
-  return totalLength;
-}
+final List<List<Map<dynamic, int>>> addNew = [
+  [{'بيبسى':3}, {'سيفن اب':3}, {'بيبسى دايت':3},{'زوجاجة مايه صغيرة':2},{'زوجاجة مايه كبيرة':3}],
+  [{'صوص تكا':3}, {'صوص كوكتيل':2},{'هونى مستردة':2},{'صوص ثوم':1}],
+  [{'بطاطس':3}, {'خبز ابيض':1},{'خبز اسمر':1}, {'ذرة':2}, ],
+];
+final topMenu=['اضافات','صوصات','اضافات اخرى',];
 Widget addOrRemoveOne(itemsNumber,context,add,remove,mainPage)=>Container(
   margin: mainPage?EdgeInsets.only(left: 20,bottom: 10):EdgeInsets.zero,
   padding: EdgeInsets.all(mainPage?10:5),
@@ -613,4 +610,7 @@ Widget seperate() =>Padding(
   )),
 );
 
-List<Map<dynamic, int>> values = [];
+List<Map<String, dynamic>> values = [];
+
+
+

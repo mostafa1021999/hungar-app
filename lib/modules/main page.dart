@@ -7,7 +7,6 @@ import 'package:delivery/componants/constant%20values.dart';
 import 'package:delivery/modules/main%20Categories.dart';
 import 'package:delivery/modules/maps.dart';
 import 'package:delivery/modules/marketPage.dart';
-import 'package:delivery/modules/restaurant%20page.dart';
 import 'package:delivery/modules/search%20page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +14,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'Provider page.dart';
 
 class MainPage extends StatelessWidget {
   @override
@@ -28,7 +29,7 @@ class MainPage extends StatelessWidget {
   },
   builder: (context, state) {
     CarouselController controller = CarouselController();
-    var categories=DeliveryCubit.get(context).catego;
+    var providers=DeliveryCubit.get(context).providerData;
     return StatefulBuilder(
       builder:(context,setState)=> NotificationListener(
         onNotification: (notification) {
@@ -70,7 +71,7 @@ class MainPage extends StatelessWidget {
             ),
             actions: [actionAppbar(context)],
           ),
-          body: (DeliveryCubit.get(context).offersData != null&&state is !GetUserSuccess &&DeliveryCubit.get(context).catego!=null) ?Directionality(
+          body: (DeliveryCubit.get(context).offersData != null&&state is !GetUserSuccess &&DeliveryCubit.get(context).categoryData!=null) ?Directionality(
            textDirection: dropdownvalue=='English Language'?TextDirection.ltr:TextDirection.rtl,
             child: ListView(
               controller: _scrollController,
@@ -90,8 +91,8 @@ class MainPage extends StatelessWidget {
                   childAspectRatio: 1/0.75,
                   crossAxisSpacing: 0.2,
                   mainAxisSpacing: 0.2,
-                  crossAxisCount: 3,children: List.generate(DeliveryCubit.get(context).catego!.data!.data.length,
-                        (index)=> categories!=null? category( DeliveryCubit.get(context).catego!.data!.data[index],index,context):Skeleton(height: 300.0,width: double.infinity,),), ),
+                  crossAxisCount: 4,children: List.generate(DeliveryCubit.get(context).categoryData!.length,
+                      (index)=> DeliveryCubit.get(context).categoryData!=null? category( DeliveryCubit.get(context).categoryData![index],index,context):Skeleton(height: 300.0,width: double.infinity,),),),
                  Padding(
                   padding:  const EdgeInsets.only(left: 10.0,right: 10),
                   child: Text(dropdownvalue=='English Language'?'Selections':'مختارات',style:  TextStyle(fontWeight: FontWeight.bold,fontSize: 18,
@@ -101,68 +102,65 @@ class MainPage extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(DeliveryCubit.get(context).offersData!.data!.banners.length, (index) => Container(
+            children: List.generate(providers!.data!.length, (index) => Container(
               margin: const EdgeInsets.all(5),
-              child: bigCard(dropdownvalue=='English Language'?'B-Laban':'بلبن',true,true,(){
+              child: bigCard(providers.data![index].providerName,providers.data![index].description??'',true,true,(){
                 DeliveryCubit.get(context).expandedHeight = 345.0;DeliveryCubit.get(context).imageHeight = 200.0;
                 DeliveryCubit.get(context).containerHeight=180.0;DeliveryCubit.get(context).currentIndex=0;DeliveryCubit.get(context).opecity=1;
                 DeliveryCubit.get(context).containerPadding=100;DeliveryCubit.get(context).rowItems=150;
+                DeliveryCubit.get(context).getProviderFoodData(providers.data![index].id);
+                values=[];price=0;
                 Navigator.push(
                 context,
                 PageTransition(
-                  child: Restaurant(),
+                  child: ProviderPage(providetDescription:providers.data![index].description ,providetName: '${providers.data![index].providerName}',providetCover: providers.data![index].providerCover,providetimage: providers.data![index].providerImage,),
                   type: PageTransitionType.downToUp,
                 ),
-              );},context),
+              );},providers.data![index].providerImage,providers.data![index].providerCover,context),
                 )),),
                       ),
               ],
             ),
           ):Directionality(
             textDirection: dropdownvalue=='English Language'?TextDirection.ltr:TextDirection.rtl,
-            child: Column(
+            child: ListView(
+              controller: _scrollController,
               children: [
-                Expanded(
-                  child: ListView(
-                    children: [
-                      search(double.infinity,dropdownvalue=='English Language'?'Search for a restaurant or stores':'ابحث عن المطاعم او المتاجر',(){navigate(context, SearchPage());}),
-                      Skeleton(height: 180.0,width: double.infinity,),
-                       Padding(
-                        padding: const EdgeInsets.only(left: 10.0,right: 10),
-                        child: Text(dropdownvalue=='English Language'?'What would you like to order?':'ودك تطلب ايش اليوم ؟',style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 15,
-                        ),),
+                search(double.infinity,dropdownvalue=='English Language'?'Search for a restaurant or stores':'ابحث عن المطاعم او المتاجر',(){navigate(context, SearchPage());}),
+                Skeleton(height: 180.0,width: double.infinity,),
+                 Padding(
+                  padding: const EdgeInsets.only(left: 10.0,right: 10),
+                  child: Text(dropdownvalue=='English Language'?'What would you like to order?':'ودك تطلب ايش اليوم ؟',style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 15,
+                  ),),
+                ),
+                GridView.count(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true, childAspectRatio: 1/1, crossAxisSpacing: 0, mainAxisSpacing: 0.2,
+                  crossAxisCount: 4,children: List.generate(8,
+                      (index)=> Column(
+                        children: [
+                          Skeleton(height: 60.0,),
+                          Skeleton(height: 15.0,),
+                        ],
+                      ),), ),
+                 Padding(
+                  padding:  const EdgeInsets.only(left: 10.0,right: 10),
+                  child: Text(dropdownvalue=='English Language'?'Selections':'مختارات',style:  TextStyle(fontWeight: FontWeight.bold,fontSize: 20,
+                  ),),
+                ),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(2, (index) => Container(
+                      width: MediaQuery.sizeOf(context).width/1.3, height: 300,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Skeleton(height: 150.0), Skeleton(height: 10.0,width: 60.0), Skeleton(height: 10.0,width: 150.0), Skeleton(height: 10.0,width: 200.0),
+                        ],
                       ),
-                      GridView.count(
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true, childAspectRatio: 1/1, crossAxisSpacing: 0, mainAxisSpacing: 0.2,
-                        crossAxisCount: 3,children: List.generate(5,
-                            (index)=> Column(
-                              children: [
-                                Skeleton(height: 60.0,),
-                                Skeleton(height: 15.0,),
-                              ],
-                            ),), ),
-                       Padding(
-                        padding:  const EdgeInsets.only(left: 10.0,right: 10),
-                        child: Text(dropdownvalue=='English Language'?'Selections':'مختارات',style:  TextStyle(fontWeight: FontWeight.bold,fontSize: 20,
-                        ),),
-                      ),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(2, (index) => Container(
-                            width: MediaQuery.sizeOf(context).width/1.3, height: 300,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Skeleton(height: 150.0), Skeleton(height: 10.0,width: 60.0), Skeleton(height: 10.0,width: 150.0), Skeleton(height: 10.0,width: 200.0),
-                              ],
-                            ),
-                          )),),
-                      ),
-                    ],
-                  ),
+                    )),),
                 ),
               ],
             ),
@@ -217,20 +215,20 @@ class PageTransition extends PageRouteBuilder {
 }
 
 Widget category(modul,index,context){return InkWell(
-  onTap: (){if(index==3){
-    navigate(context, Market());
-  }else{
-    navigate(context, MainCategories());
-  }
-},
+  onTap: (){
+    DeliveryCubit.get(context).categoryProvider(modul.id);
+    navigate(context, MainCategories(categoryName:'${modul.name}'));
+  },
   child: Column(
     children: [CachedNetworkImage(
       height: 60,fit: BoxFit.cover,
-      width: 100,
+      width: 80,
       imageUrl:'${modul.image}',
       errorWidget: (context, url, error) => const Icon(Icons.error),
       placeholder: (context,url) => const Center(child: CircularProgressIndicator()),),
-      Text('${modul.name}',maxLines: 1,textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 18),)
+      Flexible(
+        child: Text('${modul.name}',maxLines: 1,textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 15),),
+      )
     ],),
 );}

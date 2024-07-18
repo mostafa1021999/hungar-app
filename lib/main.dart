@@ -12,7 +12,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   DioHelper.init();
   await Save.init();
-
   bool? onboard = Save.getdata(key: 'save');
   token = Save.getdata(key: 'token');
   print(token);
@@ -22,7 +21,6 @@ void main() async {
   } else {
     widget = const onBoarding();
   }
-
   runApp(MyApp(widget));
 }
 
@@ -35,7 +33,7 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<DeliveryCubit>(
-          create: (context) => DeliveryCubit()..getNewUser(context)..offers()..catetory(),
+          create: (context) => DeliveryCubit()..getNewCustomer(context)..offers()..category()..getProviderData(),
         ),
         BlocProvider<AppDarkLightCubit>(
           create: (context) => AppDarkLightCubit(),

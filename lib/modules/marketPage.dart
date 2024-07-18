@@ -24,7 +24,7 @@ class Market extends StatelessWidget {
           body: DeliveryCubit.get(context).offersData != null?ListView(children: [
             Row(
               children: [
-              image('https://images.deliveryhero.io/image/hungerstation/restaurant/android_cover_photo/99995897a8808d19a4cafb0be3677cec.jpg',75.0, 75.0,15.0),
+              image('https://images.deliveryhero.io/image/hungerstation/restaurant/android_cover_photo/99995897a8808d19a4cafb0be3677cec.jpg',75.0, 75.0,15.0,BoxFit.fill),
               const SizedBox(width: 10,),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,7 +70,7 @@ class Market extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                     Expanded(child: Text(' شيكولاته العيد',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 18,fontWeight: FontWeight.bold),)),
-                    image('https://images.deliveryhero.io/image/hungerstation/restaurant/android_cover_photo/99995897a8808d19a4cafb0be3677cec.jpg',85.0, 85.0,15.0),
+                    image('https://images.deliveryhero.io/image/hungerstation/restaurant/android_cover_photo/99995897a8808d19a4cafb0be3677cec.jpg',85.0, 85.0,15.0,BoxFit.fill),
                       ],),
                   ),), ),
             GridView.count(
@@ -80,7 +80,7 @@ class Market extends StatelessWidget {
                   (index)=> Card(
                 child: Column(
                   children: [
-                    image('https://images.deliveryhero.io/image/hungerstation/restaurant/android_cover_photo/99995897a8808d19a4cafb0be3677cec.jpg',85.0, 100.0,15.0),
+                    image('https://images.deliveryhero.io/image/hungerstation/restaurant/android_cover_photo/99995897a8808d19a4cafb0be3677cec.jpg',85.0, 100.0,15.0,BoxFit.fill),
                     Expanded(child: Text(' شيكولاته العيد',maxLines: 2,overflow: TextOverflow.ellipsis,textAlign: TextAlign.start,style:TextStyle(fontSize: 18,fontWeight: FontWeight.bold),)),
                   ],),
               ),), ),

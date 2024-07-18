@@ -1,25 +1,30 @@
 import 'dart:async';
-import 'dart:ffi';
+import 'dart:collection';
 import 'package:bloc/bloc.dart';
 import 'package:blured_navigation_bar_x/blured_nav_bar_x_item.dart';
 import 'package:delivery/Dio/Dio.dart';
 import 'package:delivery/componants/constant%20values.dart';
-import 'package:delivery/models/Categories%20model.dart';
+import 'package:delivery/models/categories%20provider.dart';
+import 'package:delivery/models/coupon%20model.dart';
 import 'package:delivery/models/get%20user%20data.dart';
 import 'package:delivery/models/login%20model.dart';
 import 'package:delivery/models/offers model.dart';
 import 'package:delivery/models/otpModel.dart';
 import 'package:delivery/shared%20prefernace/shared%20preferance.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:meta/meta.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../componants/componants.dart';
+import '../models/Categories model.dart';
+import '../models/provider items model.dart';
+import '../models/provider model.dart';
+import '../modules/home.dart';
 part 'delivery_state.dart';
 
 class DeliveryCubit extends Cubit<DeliveryState> {
@@ -27,6 +32,7 @@ class DeliveryCubit extends Cubit<DeliveryState> {
     _getCurrentLocation();
     scrollControllerColumn.addListener(_onScroll);
     scrollControllerColumn.addListener(_scrollAnimation);
+    if(providerFoodData!=null)
     _calculateListOffsets();
   }
   int current = 3;
@@ -39,7 +45,6 @@ class DeliveryCubit extends Cubit<DeliveryState> {
   //============Resturant=================
   final ScrollController scrollControllerColumn = ScrollController();
   ScrollController get scrollController => scrollControllerColumn;
-  final ItemPositionsListener itemPositionsListener = ItemPositionsListener.create();
   final ItemScrollController itemScrollController = ItemScrollController();
   double expandedHeight = 345.0;
   double imageHeight=200.0;
@@ -48,7 +53,6 @@ class DeliveryCubit extends Cubit<DeliveryState> {
   double rowItems=150;
   double opecity=1;
   int currentIndex = 0;
-  List<int> listOffsets = [];
   //======================================
   static DeliveryCubit get(context) => BlocProvider.of(context);
   List<BluredNavBarXItem> bottomAr = [
@@ -110,92 +114,126 @@ class DeliveryCubit extends Cubit<DeliveryState> {
         expandedHeight = 150;
         containerHeight = 64;
       }
-
+    emit(Reload());
   }
+  List<int> listOffsets = [];
   void _calculateListOffsets() {
     int offset = 0;
-    for (int i = 0; i < bottomMenu.length; i++) {
+    for (int i = 0; i < providerFoodData!.CategoriesItemsData!.length; i++) {
       listOffsets.add(offset);
-      offset += bottomMenu[i].length * 150;
+      offset += providerFoodData!.CategoriesItemsData![i].items!.length * 140;
     }
   }
+
   void _onScroll() {
-    final itemHeight = 155; // Replace with the actual height of each item
+    final itemHeight = 150; // Replace with the actual height of each item
     final offset = scrollControllerColumn.offset;
     int? currentIndexNew;
 
-    for (int i = 0; i < listOffsets.length; i++) {
-      final startOffset = listOffsets[i];
-      final endOffset = startOffset + bottomMenu[i].length * itemHeight;
+    _calculateListOffsets(); // Call _calculateListOffsets() before using listOffsets
 
-      if (offset >= startOffset && offset < endOffset) {
-        currentIndexNew = i;
-        break;
+    if (listOffsets.isNotEmpty) {
+      for (int i = 0; i < listOffsets.length; i++) {
+        final startOffset = listOffsets[i];
+        final endOffset = startOffset + providerFoodData!.CategoriesItemsData![i].items!.length * itemHeight;
+
+        if (offset >= startOffset && offset < endOffset) {
+          currentIndexNew = i;
+          break;
+        }
       }
-    }
-    if (currentIndexNew != currentIndex) {
+      // Check if the scrollControllerColumn is at the last page
+      final totalHeight = listOffsets.last + providerFoodData!.CategoriesItemsData![listOffsets.length - 1].items!.length * itemHeight;
+      if (scrollControllerColumn.position.pixels >= totalHeight - scrollControllerColumn.position.viewportDimension) {
+        currentIndexNew = providerFoodData!.CategoriesItemsData!.length; // Set currentIndexNew to 4 if the scrollControllerColumn is at the last page
+      }
+      if (currentIndexNew != currentIndex) {
         currentIndex = currentIndexNew!;
-      if(currentIndex!=topMenu.length-1&&currentIndex!=topMenu.length-2)
-        Timer(Duration(milliseconds: 200), () {
-          itemScrollController.jumpTo(index: currentIndex, alignment: 0.3);
-        });
+          Timer(Duration(milliseconds: 200), () {
+            itemScrollController.jumpTo(index: currentIndex, alignment:currentIndex==0||currentIndex==1? 0.0:0.3);
+          });
+      }
     }
     emit(Reload());
   }
+
+  int calculateItemsBeforeIndex(int foodIndex) {
+    int totalItems = 0;
+    if (providerFoodData!.CategoriesItemsData!.isNotEmpty && foodIndex >= 0 && foodIndex < providerFoodData!.CategoriesItemsData!.length) {
+      for (int i = 0; i < foodIndex; i++) {
+        totalItems += providerFoodData!.CategoriesItemsData![i].items!.length;
+      }
+    }
+    return totalItems;
+  }
+
   void scrollToIndex(int index) {
-    int items=calculateTotalLength(bottomMenu,index);
+    int items = calculateItemsBeforeIndex(index);
     scrollController.animateTo(
-      items * 170, // Replace ITEM_HEIGHT with the height of each item in your list
+      items * 150, // Replace ITEM_HEIGHT with the height of each item in your list
       duration: Duration(milliseconds: 500), // Adjust the duration as per your preference
       curve: Curves.easeOut, // Adjust the curve as per your preference
     );
+    emit(Reload());
   }
-  void addValue(String name, int value) {
+  void addValue(String name, int value,image,int foodPrice,id,extraId) {
     bool valueExists = false;
     for (var map in values) {
-      if (map.containsKey(name)) {
-        map[name] = (map[name]! + 1);
+      if (map['name'] == name) {
+        map['quantity'] = (map['quantity']! + 1);
         valueExists = true;
         break;
       }
     }
     if (!valueExists) {
-      values.add({name: value});
+      values.add({
+        'name': name,
+        'quantity': value,
+        'image': image,
+        'price': foodPrice,
+        'id': id,
+        'extraItems': extraId
+      });
+      print(values);
     }
+    price+=foodPrice;
     emit(Reload());
   }
-  void minusValue(String name, int value) {
+
+  void minusValue(String name, int value, image, int foodPrice,id) {
     bool valueExists = false;
     for (var map in values) {
-      if (map.containsKey(name)) {
-        map[name] = (map[name]! - 1); // Subtract 1 instead of adding 1
-        if (map[name] == 0) {
-          values.remove(map); // Remove entry from map if value is 0
+      if (map['name'] == name) {
+        map['quantity'] = (map['quantity']! - 1);
+        if (map['quantity'] == 0) {
+          values.remove(map);
         }
         valueExists = true;
         break;
       }
     }
-    if (!valueExists) {
-      values.add({name: value});
+
+    if (valueExists) {
+      price -= foodPrice;
+      emit(Reload());
     }
-    emit(Reload());
   }
   bool isNameInList(String name) {
     for (var map in values) {
-      if (map.containsKey(name)) {
+      if (map['name'] == name) {
         return true;
       }
     }
     return false;
   }
+
   int? getValueByName(String name) {
     for (var map in values) {
-      if (map.containsKey(name)) {
-        return map[name];
+      if (map['name'] == name) {
+        return map['quantity'];
       }
     }
-    return null; // Return null if the name is not found
+    return null;
   }
   //======================================================
   Future<void> _getCurrentLocation() async {
@@ -239,7 +277,7 @@ class DeliveryCubit extends Cubit<DeliveryState> {
   }
   void changeView() {
     changeViewNew = !changeViewNew;
-    emit(ViewChange());
+    emit(CategoryProviderSuccess());
   }
   OffersModel? offersData;
   Map<int?, bool?> favorites={};
@@ -273,31 +311,46 @@ class DeliveryCubit extends Cubit<DeliveryState> {
     emit(Reload());
   });
 }
-  Categories ?catego;
-  void catetory(){
+  List<Categories> ?categoryData;
+  void category() {
     emit(CategoriesLoading());
-    DioHelper.getData(url: 'categories',
-      token: "y6h6jwH610mVxvdY5Xrenu8e4lULiQ80YzE0MnCjeNGYU4pxumL5fPLUYLjTEYmX1UIIR0",
-        myapp: false,
-    ).then((value) {
-      catego=Categories.fromJson(value.data);
+    DioHelper.getData(url: 'categories', myapp: true)
+        .then((value) {
+      final List<dynamic> categories = value.data;
+      categoryData = categories.map((item) => Categories.fromJson(item)).toList();
+      print('trrrrrrrrrrrrrrrr');
       emit(CategoriesSuccess());
     }).catchError((error) {
+      print(error.toString());
       emit(CategoriesError());
-    });}
+    });
+  }
+
+  CategoryProviderModel? categoryProvideData;
+  void categoryProvider(id) {
+    emit(CategoryProviderLoading());
+    DioHelper.getData(url: 'categories/$id', myapp: true)
+        .then((value) {
+      categoryProvideData = CategoryProviderModel.fromJson(value.data);
+      print('trrrrrrrrrrrrrrrr');
+      emit(CategoryProviderSuccess());
+    }).catchError((error) {
+      print(error.toString());
+      emit(CategoryProviderError());
+    });
+  }
+
   LoginUser ?loginUser;
   void userLogin({
     required String phoneNumber,
   }){
     emit(LoginLoading());
-    DioHelper.postData(url: 'users/generate-otp', data: {
+    DioHelper.postData(url: 'customers/generate-otp', data: {
       'phoneNumber' : phoneNumber,
     }).then((value) {
       loginUser= LoginUser.fromJson(value.data);
-      print(value.data);
       emit(LoginSuccess());
     }).catchError((error) {
-      print(error.toString());
       emit(LoginError(error.toString()));
     });
   }
@@ -309,17 +362,16 @@ class DeliveryCubit extends Cubit<DeliveryState> {
   }){
     otp=otpNumber;
     emit(LoginOTPLoading());
-    DioHelper.postData(url: 'users/verify-otp', data: {
+    DioHelper.postData(url: 'customers/verify-otp', data: {
       'phoneNumber' : phoneNumber,
       'otp':otpNumber
     }).then((value) {
       loginOTP= LoginOTP.fromJson(value.data);
       print(value.data);
       token=loginOTP!.token;
-      getNewUser(context);
+      getNewCustomer(context);
       emit(LoginOTPSuccess());
     }).catchError((error) {
-      print(error.toString());
       emit(LoginOTPError());
     });
   }
@@ -330,26 +382,26 @@ class DeliveryCubit extends Cubit<DeliveryState> {
 
   GetUserData ?getUserData;
   Balance ?balanceData;
-  void getNewUser(context){
+  void getNewCustomer(context){
     emit(GetUserLoading());
-    DioHelper.getData(url: 'users/auth/me',
+    DioHelper.getData(url: 'customers/auth/me',
       token: token,
     myapp: true
     ).then((value) {
       getUserData=GetUserData.fromJson(value.data);
+      print(value.data);
       DioHelper.getData(url: 'wallet/${getUserData!.id}/balance',myapp: true).then((newValue) async {
             balanceData=Balance.fromJson(newValue.data);
             balances=await Save.savedata(key: 'balance',value:balanceData!.balance) ;
             emit(GetUserSuccess());
       });
     }).catchError((error) {
-      print(error.toString());
       emit(GetUserError());
     });
   }
   void userInvitation(){
     emit(LoginOTPLoading());
-    DioHelper.postData(url: 'users/generate-invitation-code', token: token, data: {}).then((value) {
+    DioHelper.postData(url: 'customers/generate-invitation-code', token: token, data: {}).then((value) {
       loginOTP= LoginOTP.fromJson(value.data);
       print(value.data);
       token=loginOTP!.token;
@@ -367,24 +419,114 @@ class DeliveryCubit extends Cubit<DeliveryState> {
   }){
     emit(UpdateUserLoading());
     Map<String, dynamic> data = {}; // Create an empty map to hold the updated data
-
-    if (username != null) {data['username'] = username;}
+    if (username != null) {data['name'] = username;}
     if (email != null) {data['email'] = email;}
-    if (birthdate != null) {data['birthdate'] = birthdate;}
-    DioHelper.patchData(url: 'users/auth/me', token: token,data:data).then((value) {
-      DioHelper.getData(url: 'users/auth/me',
+    if (birthdate != null) {data['birthday'] = birthdate;}
+    DioHelper.patchData(url: 'customers/auth/me',token: token,data:data).then((value) {
+      DioHelper.getData(url: 'customers/auth/me',
           token: token,
           myapp: true
       ).then((value) {
         getUserData=GetUserData.fromJson(value.data);
+        print(value.data);
       });
-
-      print('truuuuuuuuuuu');
-      emit(UpdateUserSuccess(getUserData!));
+      emit(UpdateUserSuccess());
     }).catchError((error) {
+      print(error.toString());
       emit(UpdateUserError());
     });
   }
-
+  Provider? providerData;
+  void getProviderData(){
+    emit(GetProviderLoading());
+    DioHelper.getData(url: 'providers',
+        myapp: true
+    ).then((value) {
+      providerData = Provider.fromJson(value.data);
+        emit(GetProviderSuccess());
+      }).catchError((error) {
+      emit(GetProviderError());
+    });
+  }
+  ProviderItemsMenu? providerFoodData;
+  void getProviderFoodData(id) {
+    emit(GetProviderFoodLoading());
+    DioHelper.getData(url: 'providers/$id', myapp: true)
+        .then((value) {
+      providerFoodData=ProviderItemsMenu.fromJson(value.data);
+      print(value.data);
+      emit(GetProviderFoodError());
+    })
+        .catchError((error) {
+      print(error.toString());
+      emit(GetProviderFoodError());
+    });
+  }
+  Coupon ?couponData;
+  void postCoupon({
+    required String coupon,
+    required int orderPrice,
+    required int shippingPrice,
+    context
+  }){
+    emit(CouponLoading());
+    DioHelper.postData(url: 'coupons/validate', data: {
+      'code' : coupon,
+      'orderPrice':orderPrice,
+      'shippingPrice':shippingPrice
+    }).then((value) {
+      couponData=Coupon.fromJson(value.data);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: Colors.green.shade400,
+        content: Text(dropdownvalue=='English Language'?"Coupon add successfully":'تم اضافه الكوبون بنجاح',style: TextStyle(color: Colors.white),),
+      ));
+      Navigator.pop(context);
+      emit(CouponSuccess());
+    }).catchError((error) {
+      print(error.toString());
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: Colors.red.shade400,
+        content: Text(dropdownvalue=='English Language'?"Coupon is not valid":'الكوبون ليس صحيح',style: TextStyle(color: Colors.white),),
+      ));
+      Navigator.pop(context);
+      emit(CouponError());
+    });
+  }
+  void postOrder({
+    String? coupon,
+    required List items,
+    required int shippingPrice,
+    required String customerId,
+    context
+  }){
+    emit(PostOrderLoading());
+    DioHelper.postData(url: 'orders', data: {
+      'coupon' : coupon,
+      'items':items,
+      'shippingPrice':shippingPrice,
+      'customerId':customerId,
+      'location': {
+        "type": "Point",
+        "coordinates": [
+          position1,
+          position2
+        ]
+      },
+    }).then((value) {
+      pageController=PageController(initialPage: 2);
+      DeliveryCubit.get(context).changeNavigator(2);
+      DeliveryCubit.get(context).couponData=null;
+      navigateAndFinish(context, Home());
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Center(child: Text(dropdownvalue=='English Language'?'Order has been done successfully':"تم تنفيذ الطلب بنجتح",style:TextStyle(fontSize: 15,fontWeight: FontWeight.w400,color: Colors.white) ,)),backgroundColor: Colors.green.shade400,),);
+      emit(PostOrderSuccess());
+    }).catchError((error) {
+      print(error.toString());
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: Colors.red.shade400,
+        content: Text(dropdownvalue=='English Language'?"Failed to execute the order":'فشل تنفيذ الاوردر',style: TextStyle(color: Colors.white),),
+      ));
+      emit(PostOrderError());
+    });
+  }
 }
 

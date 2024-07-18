@@ -11,6 +11,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class Payment extends StatelessWidget {
@@ -111,10 +112,15 @@ class Payment extends StatelessWidget {
                                 ],
                               )),
                       SizedBox(width: 10,),
-                      Container(
-                        decoration: BoxDecoration( color: Colors.grey.shade300, borderRadius: BorderRadius.circular(6)),
-                        padding: EdgeInsets.all(5),
-                        child: Text(dropdownvalue=='English Language'?'change':'تغيير',style: TextStyle(color: brownColor,fontSize: 17,),),)
+                      InkWell(
+                        onTap: (){
+                          pageController=PageController(initialPage: 3);
+                          navigateAndFinish(context, Home());},
+                        child: Container(
+                          decoration: BoxDecoration( color: Colors.grey.shade300, borderRadius: BorderRadius.circular(6)),
+                          padding: EdgeInsets.all(5),
+                          child: Text(dropdownvalue=='English Language'?'change':'تغيير',style: TextStyle(color: brownColor,fontSize: 17,),),),
+                      )
                             ],),
                         ],
                       ),
@@ -172,19 +178,43 @@ class Payment extends StatelessWidget {
                         ),
                         separatorBuilder:(context,index)=> seperate(),
                       ),
-                    )
+                    ),
                   ],),
                 ),
               ),
               Directionality(
                 textDirection: dropdownvalue=='English Language'?TextDirection.rtl:TextDirection.ltr,
-                child: cartPaymentBottom(dropdownvalue=='English Language'?'Confirm order':'تنفيذ الطلب', (){
-                  pageController=PageController(initialPage: 2);
-                  DeliveryCubit.get(context).changeNavigator(2);
-                        navigateAndFinish(context, Home());
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Center(child: Text(dropdownvalue=='English Language'?'Order has been done successfully':"تم تنفيذ الطلب بنجتح",style:TextStyle(fontSize: 15,fontWeight: FontWeight.w400,color: Colors.white) ,)),backgroundColor: Colors.green.shade400,),);
-                }, context),
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 15.0,left: 15,right: 15),
+                  child: Row(
+                    mainAxisAlignment: dropdownvalue=='English Language'?MainAxisAlignment.start:MainAxisAlignment.end,
+                    children: [
+                      InkWell(
+                        onTap: (){enterCoupon(context);},
+                      child: Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(color: mainColor.shade400,borderRadius: BorderRadius.circular(8)),
+                      width: 140,
+                        child: Row(children: [
+                          Text(dropdownvalue=='English Language'?'Add coupon':'أضافه كوبون',style: TextStyle(fontSize: 19,fontWeight: FontWeight.w500),),
+                          Icon(Icons.control_point,size: 27,),
+                        ],),
+                      ),
+                    ),
+                  ],),
+                ),
+              ),
+              state is PostOrderLoading?
+              SpinKitWave(
+                color:isdark??false? Colors.white:borderColor,
+                size: 25.0,
               )
+              :Directionality(
+                textDirection: dropdownvalue=='English Language'?TextDirection.rtl:TextDirection.ltr,
+                child: cartPaymentBottom(dropdownvalue=='English Language'?'Confirm order':'تنفيذ الطلب', (){
+                  DeliveryCubit.get(context).postOrder(items: values, shippingPrice: price, customerId: '${DeliveryCubit.get(context).getUserData!.id}',coupon: '${_couponController.text}',context: context);
+                }, context),
+              ),
             ],
           )
       ),
@@ -192,6 +222,58 @@ class Payment extends StatelessWidget {
   },
 );
   }
+}
+final TextEditingController _couponController = TextEditingController();
+
+Future<void> enterCoupon(context) async {
+
+  await showDialog(
+    context: context,
+    builder: (context) {
+      return BlocConsumer<DeliveryCubit, DeliveryState>(
+  listener: (context, state) {},
+  builder: (context, state) {
+    List<Widget> actions = [];
+
+    if (state is CouponLoading) {
+      actions = [
+        SpinKitWave(
+          color:isdark??false? Colors.white:borderColor,
+          size: 25.0,
+        )
+      ];
+    } else {
+      actions = [
+        bottom(
+          dropdownvalue == 'English Language' ? 'Add' : 'اضافه',
+              () {
+            DeliveryCubit.get(context).postCoupon(
+              coupon: _couponController.text,
+              orderPrice: price,
+              shippingPrice: 10,
+              context: context,
+            );
+          },
+        )
+      ];
+    }
+    return AlertDialog(
+        content: SizedBox(
+          width: MediaQuery.sizeOf(context).width/1.2,
+          child: TextField(
+            autofocus: true,
+            controller: _couponController,
+            decoration: InputDecoration(
+              hintText: dropdownvalue=='English Language'?'Enter coupon code':"اضف الكوبون",
+            ),
+          ),
+        ),
+        actions: actions,
+      );
+  },
+);
+    },
+  );
 }
 List<IconData> listIcons=[Icons.credit_card,Icons.apple_outlined,Icons.account_balance_wallet_rounded];
 List<String> listTextAr =[ 'دفع فيذة','Apple Pay','المحفظة'];
